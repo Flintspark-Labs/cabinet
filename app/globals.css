@@ -64,3 +64,27 @@ pre.packet { background: #fff; border: 1px solid var(--rule); padding: 1rem; fon
 .brief { font-family: var(--serif); }
 .brief h3 { margin-top: 1.2rem; }
 @media (max-width: 600px) { h1 { font-size: 1.9rem; } .hero h1 { font-size: 2.2rem; } }
+
+/* Exhibits: mock windows on the public site */
+.window { background: #fff; border: 1px solid var(--rule); box-shadow: 0 1px 0 var(--rule), 0 12px 30px -18px rgba(29,26,20,.35); margin: 1.2rem 0; font-size: 0.93rem; }
+.titlebar { display: flex; align-items: center; gap: 0.7rem; padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--rule); background: #f1ece0; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.titlebar .dots { width: 36px; height: 10px; background: radial-gradient(circle at 5px 5px, #c9bfa8 4px, transparent 5px), radial-gradient(circle at 18px 5px, #c9bfa8 4px, transparent 5px), radial-gradient(circle at 31px 5px, #c9bfa8 4px, transparent 5px); }
+.titlebar .conn { margin-left: auto; }
+.chat { padding: 0.8rem 1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.msg { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.6rem; }
+.msg .who { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding-top: 0.25rem; }
+.msg.user > div { background: #f7f3ea; padding: 0.5rem 0.75rem; }
+.msg p { margin: 0.4rem 0; }
+.tool { border: 1px solid var(--rule); border-left: 3px solid var(--accent); margin: 0.4rem 0; font-size: 0.85rem; }
+.tool-call { padding: 0.35rem 0.6rem; display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; background: #eef2f7; }
+.tool-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.tool-args { font-family: var(--mono); color: var(--muted); font-size: 0.78rem; }
+.tool-result { padding: 0.35rem 0.6rem; font-family: var(--mono); font-size: 0.78rem; color: var(--ink); white-space: pre-wrap; }
+.local { border-left: 3px solid var(--seal); padding-left: 0.6rem; color: var(--muted); font-size: 0.88rem; }
+.draft { border: 1px dashed var(--rule); padding: 0.2rem 0.8rem; margin: 0.5rem 0; font-family: var(--serif); }
+.window.page .page-body { padding: 1rem 1.2rem; background: var(--paper); }
+.fake-textarea { border: 1px solid var(--rule); background: #fff; padding: 0.6rem; font-family: var(--serif); margin: 0.6rem 0; color: var(--muted); }
+.small { font-size: 0.9rem; }
+.exhibit-row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.flowline { font-family: var(--serif); font-style: italic; color: var(--muted); text-align: center; margin: 0.2rem 0; }
+@media (max-width: 600px) { .msg { grid-template-columns: 1fr; gap: 0.1rem; } .titlebar .conn { display: none; } }

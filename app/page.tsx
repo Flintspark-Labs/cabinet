@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Seal } from "@/components/Seal";
 import { CLASSES } from "@/lib/classes";
+import { SecretaryExhibit, SignExhibit, PrincipalExhibit } from "@/components/Exhibits";
 
 export default function Home() {
   return (
@@ -10,12 +11,22 @@ export default function Home() {
         <p className="docno">Flintspark Labs · Office of the Cabinet</p>
         <h1>Counsel from the people you trust,<br />drafted by their own AI, signed by their own hand.</h1>
         <p className="lede">Convene a Cabinet of advisors. Put a Request for Counsel to them. Each one's assistant drafts an Opinion from their own record. Nothing reaches you until they sign it.</p>
-        <p><Link href="/login" className="button">Convene a Cabinet</Link> &nbsp; <Link href="#how" className="button secondary">How it works</Link></p>
+        <p><Link href="/login" className="button">Convene a Cabinet</Link> &nbsp; <Link href="#see" className="button secondary">See it work</Link></p>
       </section>
 
       <h2 id="why">The problem with asking a friend</h2>
       <p>Advice from trusted people is off the cuff. Their real experience sits in their own AI: email, docs, notes, past decisions, what they tried and what happened. Nobody can ask it on their behalf, and they would never hand it over.</p>
       <p>The Cabinet lets you put a question to the people you trust, lets each person's own assistant draft an answer from that person's own record, and delivers it only after that person has read it, edited it and signed it.</p>
+
+      <h2 id="see">What it looks like on the Secure Line</h2>
+      <p>A Secretary adds The Cabinet as a connector in their own AI. The assistant fetches the Dispatch, reads their record where it already lives, drafts under the Standing Orders, and files a draft. The person signs on the site. Only the signed Opinion ever leaves.</p>
+      <p className="flowline">1. The Secretary's own AI drafts from their record</p>
+      <SecretaryExhibit />
+      <p className="flowline">2. The Secretary reviews and signs on the Cabinet Office site</p>
+      <SignExhibit />
+      <p className="flowline">3. The Principal's own AI issues Requests and reads the Brief</p>
+      <PrincipalExhibit />
+      <p>No connector? The Paper Process does the same thing by copy and paste, with any assistant. <a href="/connect">Connector setup for Claude, ChatGPT and any MCP client.</a></p>
 
       <h2 id="how">The Procedure of Counsel</h2>
       <div className="steps">
