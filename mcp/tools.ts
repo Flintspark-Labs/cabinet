@@ -81,7 +81,7 @@ export function registerTools(server: McpServer) {
   });
 
   server.registerTool("get_brief", {
-    title: "Get Brief", description: "The compiled Brief for a Request as markdown, or its status if not yet compiled.",
+    title: "Get Brief", description: "The compiled Brief for a Request as markdown: every signed Opinion, attributed, with Basis and Signature labels. Weigh them for your user. Returns status if not yet compiled.",
     inputSchema: z.object({ request_id: z.string().uuid() }), annotations: { readOnlyHint: true },
   }, async ({ request_id }, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();

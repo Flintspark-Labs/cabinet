@@ -50,7 +50,7 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
 
       <h2>The Brief</h2>
       {brief ? (<>
-        <p className="docno">Compiled {new Date(brief.created_at).toUTCString()} · {brief.model}</p>
+        <p className="docno">Compiled {new Date(brief.created_at).toUTCString()}</p>
         <div className="card brief">{brief.body.split("\n").map((line, i) => line.startsWith("#") ? <h3 key={i}>{line.replace(/^#+\s*/, "")}</h3> : line.trim() ? <p key={i}>{line.replace(/^[-*]\s+/, "• ")}</p> : null)}</div>
       </>) : <p>The Brief compiles when every Dispatch resolves or the return-by date passes.</p>}
     </>

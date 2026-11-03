@@ -6,7 +6,7 @@ The Cabinet Office never receives a Secretary's sources. Only signed Opinions cr
 
 ## Stack
 
-Next.js (App Router, TypeScript) on Vercel. Supabase for auth, Postgres and row-level security. Resend for mail. The Anthropic API compiles the Brief. An MCP server at `/api/mcp` is the Secure Line.
+Next.js (App Router, TypeScript) on Vercel. Supabase for auth, Postgres and row-level security. Resend for mail. The Brief is compiled without a model: every signed Opinion, attributed, labels kept. An MCP server at `/api/mcp` is the Secure Line.
 
 ## Layout
 

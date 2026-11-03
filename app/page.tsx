@@ -24,7 +24,7 @@ export default function Home() {
         <div className="card"><h3>Dispatch</h3><p>Every Secretary receives a private link. They accept or recuse. No reason required.</p></div>
         <div className="card"><h3>Staff drafts</h3><p>The Secretary pastes the Dispatch Packet into their own AI, or connects it over the Secure Line. Their assistant reads their record on their side and drafts an Opinion under the Standing Orders.</p></div>
         <div className="card"><h3>Sign</h3><p>The Secretary reviews, edits and signs on this site. Every Opinion carries two labels: its Basis and its Signature. Unsigned drafts never leave.</p></div>
-        <div className="card"><h3>The Brief</h3><p>When every Dispatch resolves, the Cabinet Office compiles a Brief: agreements, disagreements, open threads, every point attributed.</p></div>
+        <div className="card"><h3>The Brief</h3><p>When every Dispatch resolves, the Cabinet Office compiles the Brief: every signed Opinion in one document, attributed and labelled. Your own AI can read it over the Secure Line and weigh it for you. The Cabinet Office runs no model of its own.</p></div>
       </div>
 
       <h2>Five classes of Request</h2>
