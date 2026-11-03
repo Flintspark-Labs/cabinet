@@ -1,0 +1,42 @@
+import Link from "next/link";
+import { dispatchByToken, isOpen } from "@/lib/secretary";
+import { acceptDispatch, recuseDispatch } from "@/lib/actions";
+import { CLASSES, rfcNumber, STATUS_LABEL } from "@/lib/classes";
+
+export default async function DispatchPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ signed?: string }> }) {
+  const { token } = await params;
+  const { signed } = await searchParams;
+  const d = await dispatchByToken(token);
+  if (!d) return <><h1>No such Dispatch</h1><p>This link is not valid. It may have been mistyped, or the Request may have been deleted.</p></>;
+  const principal = d.request.principal.display_name ?? "A Principal";
+  return (
+    <>
+      <p className="docno">Cabinet Dispatch · {rfcNumber(d.request.rfc_number)}</p>
+      <h1>Request for Counsel</h1>
+      <p>Dear {d.appointment.display_name}{d.appointment.portfolio ? `, ${d.appointment.portfolio}` : ""}: <strong>{principal}</strong> asks for your counsel.</p>
+      <div className="card">
+        <p className="docno">{CLASSES[d.request.class].label} · return by {new Date(d.request.return_by).toUTCString()}</p>
+        <p className="lede">{d.request.question}</p>
+        {d.request.context && <p><em>Context from the Principal:</em> {d.request.context}</p>}
+      </div>
+      {signed && <p className="notice">Your Opinion is signed and filed. {principal} has been notified. Thank you.</p>}
+      <p className="status">Status: {STATUS_LABEL[d.status]}</p>
+
+      {isOpen(d) && (<>
+        <h2>Accept or recuse</h2>
+        <p>Accepting opens the Dispatch Packet. Your own AI reads your record on your side; nothing reaches the Cabinet Office until you sign. You may recuse without giving a reason.</p>
+        <div className="grid">
+          <form action={acceptDispatch} className="card"><input type="hidden" name="token" value={token} /><input type="hidden" name="channel" value="paper" />
+            <h3 style={{ marginTop: 0 }}>The Paper Process</h3><p>Copy the packet, paste it into Claude, ChatGPT, Gemini or any assistant, paste the draft back here.</p><button>Accept · Paper Process</button></form>
+          <form action={acceptDispatch} className="card"><input type="hidden" name="token" value={token} /><input type="hidden" name="channel" value="secure_line" />
+            <h3 style={{ marginTop: 0 }}>The Secure Line</h3><p>Your AI client connects to The Cabinet over MCP, fetches the Dispatch and files the draft. You still sign here.</p><button>Accept · Secure Line</button></form>
+        </div>
+        <form action={recuseDispatch}><input type="hidden" name="token" value={token} /><button className="secondary">Recuse</button></form>
+        {d.status !== "sent" && <p><Link href={`/d/${token}/paper`}>Open the Dispatch Packet</Link> · <Link href={`/d/${token}/sign`}>Go to signing</Link></p>}
+      </>)}
+      {d.status === "recused" && <p>You have recused. Nothing further is needed.</p>}
+      {d.status === "expired" && <p>The return-by date has passed. This Dispatch is closed.</p>}
+      {d.status === "signed" && !signed && <p>You signed this Opinion. Thank you.</p>}
+    </>
+  );
+}
