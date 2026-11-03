@@ -28,6 +28,7 @@ Next.js (App Router, TypeScript) on Vercel. Supabase for auth, Postgres and row-
 ## Tests
 
 - `npm test` runs the unit tests (packet, tokens).
+- `npm run e2e` runs the whole procedure over MCP and the site against a running server (see NOTES.md).
 - `DATABASE_URL=postgresql://... npm run test:rls` runs the pgTAP row-level security tests (`create extension pgtap` once; Supabase ships it). `supabase test db` also works where Docker is available.
 
 ## License

@@ -16,6 +16,15 @@ Kept by the build agent so a later session can pick up without re-deriving.
 - No middleware; every Principal page calls `requireUser()`.
 - `db()` (service role) is created lazily so builds without env succeed.
 
+## Testing
+- `npm test` unit; `DATABASE_URL=... npm run test:rls` pgTAP (11 checks, all passing 2026-11-03).
+- `npm run e2e` drives the whole flow against a running server + real DB: needs `PAT` (a Principal PAT), `MAIL_LOG` (file where the server's stdout goes; dispatch links are read from the logged mail when RESEND_API_KEY is unset), `BASE` (default http://localhost:3457). Start the server with `npx next build && npx next start -p 3457 > $MAIL_LOG`. Passing 2026-11-03.
+- E2E test Principal in prod DB: e2e-principal@example.com (profile 00000000-0000-0000-0000-0000000000e2) with a PAT named `e2e`. Delete when real users arrive.
+- Vercel runtime logs are 403 on this team plan; test mail flows locally.
+
+## Domain
+- cabinet.flintsparklabs.com is attached to the Vercel project and in the Supabase redirect allow-list. DNS is at Cloudflare (not Route 53). Needs CNAME `cabinet` -> `9dcf01da54dbd149.vercel-dns-016.com` (DNS only, not proxied). After it resolves: set Vercel APP_URL and Supabase site_url to https://cabinet.flintsparklabs.com and redeploy.
+
 ## Open
 - Supabase default auth mailer is limited to 2 emails/hour. Set custom SMTP (Resend) in Supabase Auth once a sending domain is verified.
 - Final name and domain not chosen. When chosen: add domain in Vercel, update APP_URL, Supabase site URL and allow-list.

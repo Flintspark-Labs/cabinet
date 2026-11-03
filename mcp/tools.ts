@@ -7,7 +7,7 @@ import { CLASSES, BASIS_LABEL, AUTHORSHIP_LABEL, rfcNumber, appUrl } from "@/lib
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
 const json = (o: unknown) => text(JSON.stringify(o, null, 2));
-const fail = (msg: string) => ({ content: [{ type: "text" as const, text: msg }], isError: true });
+const fail = (msg: string, e?: unknown) => { if (e) console.error("mcp tool failed:", e); return { content: [{ type: "text" as const, text: msg }], isError: true }; };
 type Ctx = { http?: { authInfo?: { clientId: string } } };
 
 // The Secure Line (Article V). Secretary tools are scoped by dispatch token; Principal tools by bearer PAT.
@@ -34,14 +34,14 @@ export function registerTools(server: McpServer) {
     try {
       const r = await S.submitDraft(dispatch_token, body, basis, authorship, "secure_line");
       return json({ ...r, status: "drafted", next: "Give your user the sign_url. Signing is a human act on the site." });
-    } catch (e) { return fail((e as Error).message); }
+    } catch (e) { return fail((e as Error).message, e); }
   });
 
   server.registerTool("recuse", {
     title: "Recuse", description: "Decline a Dispatch on the Secretary's behalf. Only call this when your user has said they want to recuse. No reason is required.",
     inputSchema: z.object({ dispatch_token: z.string().min(10).max(100) }),
   }, async ({ dispatch_token }) => {
-    try { await S.recuse(dispatch_token); return json({ status: "recused" }); } catch (e) { return fail((e as Error).message); }
+    try { await S.recuse(dispatch_token); return json({ status: "recused" }); } catch (e) { return fail((e as Error).message, e); }
   });
 
   const principal = (ctx: Ctx) => ctx.http?.authInfo?.clientId ?? null;
@@ -52,7 +52,7 @@ export function registerTools(server: McpServer) {
     inputSchema: z.object({ name: z.string().min(1).max(120), secretaries: z.array(z.object({ email: z.string().email(), name: z.string().min(1).max(120), portfolio: z.string().max(120).optional() })).max(25) }),
   }, async ({ name, secretaries }, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
-    try { return json({ cabinet_id: await P.conveneCabinet(db(), pid, name, secretaries) }); } catch (e) { return fail((e as Error).message); }
+    try { return json({ cabinet_id: await P.conveneCabinet(db(), pid, name, secretaries) }); } catch (e) { return fail((e as Error).message, e); }
   });
 
   server.registerTool("issue_request", {
@@ -62,7 +62,7 @@ export function registerTools(server: McpServer) {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
     const { data: cab } = await db().from("cabinets").select("id").eq("id", input.cabinet_id).eq("principal_id", pid).maybeSingle();
     if (!cab) return fail("No such Cabinet.");
-    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null })); } catch (e) { return fail((e as Error).message); }
+    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null })); } catch (e) { return fail((e as Error).message, e); }
   });
 
   const ownRequest = async (pid: string, id: string) => (await db().from("requests").select("id, rfc_number, status").eq("id", id).eq("principal_id", pid).maybeSingle()).data;
