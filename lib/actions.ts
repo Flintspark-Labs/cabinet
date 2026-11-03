@@ -108,3 +108,15 @@ export async function optOut(_: unknown, f: FormData): Promise<{ error?: string;
   await db().from("audit_log").insert({ actor: email, action: "opt_out", entity: "do_not_dispatch", entity_id: null });
   return { done: true };
 }
+
+export async function createPat(_: unknown, f: FormData): Promise<{ error?: string; token?: string }> {
+  const { supabase, user } = await requireUser();
+  const { issuePat } = await import("./pat");
+  try { const token = await issuePat(supabase, user.id, str(f, "name")); revalidatePath("/account"); return { token }; } catch (e) { return { error: (e as Error).message }; }
+}
+
+export async function revokePat(f: FormData) {
+  const { supabase } = await requireUser();
+  await supabase.from("personal_access_tokens").delete().eq("id", str(f, "id"));
+  revalidatePath("/account");
+}
