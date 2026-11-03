@@ -56,7 +56,7 @@ export function registerTools(server: McpServer) {
   });
 
   server.registerTool("issue_request", {
-    title: "Issue Request for Counsel", description: "Issue an RFC to a Cabinet and dispatch it to every Secretary by email. Requires a Principal personal access token.",
+    title: "Issue Request for Counsel", description: "Issue an RFC to a Cabinet. Emails every appointed Secretary and returns a share_url anyone can open to take a seat by name. Requires a Principal personal access token.",
     inputSchema: z.object({ cabinet_id: z.string().uuid(), question: z.string().min(1).max(2000), class: z.enum(["recommend", "handle", "find", "weigh_in", "coordinate"]), context: z.string().max(4000).default(""), return_by: z.string().datetime({ offset: true }).optional().describe("ISO 8601; default 7 days, maximum 30") }),
   }, async (input, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();

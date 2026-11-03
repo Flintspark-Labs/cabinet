@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./supabase/admin";
-import { hashToken } from "./token";
+import { hashToken, newToken } from "./token";
 import { audit } from "./audit";
 import { dispatchPacket } from "./packet";
 import { maybeCompileBrief } from "./brief";
@@ -82,4 +82,27 @@ export async function sign(token: string, body: string, basis: "record" | "gener
   const { data: u } = req ? await db().auth.admin.getUserById(req.principal_id) : { data: { user: null } };
   if (u.user?.email) await sendMail(u.user.email, `Opinion signed · ${rfcNumber(d.request.rfc_number)}`, opinionSignedEmail(d.appointment.display_name, d.request.rfc_number, `${appUrl()}/requests/${d.request.id}`));
   await maybeCompileBrief(d.request.id);
+}
+
+// Join a Request by its share link: name required, email optional. Creates the appointment and Dispatch, returns the dispatch token.
+export async function joinByShareToken(share: string, name: string, email: string | null) {
+  name = name.trim().slice(0, 120);
+  email = email?.trim().toLowerCase() || null;
+  if (!name) throw new Error("Your name is required.");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email does not look right.");
+  const { data: req } = await db().from("requests").select("id, cabinet_id, principal_id, return_by, status").eq("share_token", share).maybeSingle();
+  if (!req || req.status !== "open" || new Date(req.return_by) < new Date()) throw new Error("This Request is closed.");
+  if (email && (await db().from("do_not_dispatch").select("email").eq("email", email).maybeSingle()).data) throw new Error("That address has opted out of The Cabinet.");
+  const { count } = await db().from("appointments").select("id", { count: "exact", head: true }).eq("cabinet_id", req.cabinet_id);
+  if ((count ?? 0) >= 25) throw new Error("This Cabinet is full (25 Secretaries).");
+  const { count: today } = await db().from("dispatches").select("id, requests!inner(principal_id)", { count: "exact", head: true })
+    .eq("requests.principal_id", req.principal_id).gte("sent_at", new Date(Date.now() - 86400e3).toISOString());
+  if ((today ?? 0) >= 50) throw new Error("This Principal's daily Dispatch limit is reached. Try tomorrow.");
+  const { data: appt, error } = await db().from("appointments").insert({ cabinet_id: req.cabinet_id, email, display_name: name }).select("id").single();
+  if (error) throw new Error(error.code === "23505" ? "Someone with that email already joined this Cabinet. Use the link from your email, or join without an email." : error.message);
+  const { token, hash } = newToken();
+  const { data: d, error: dErr } = await db().from("dispatches").insert({ request_id: req.id, appointment_id: appt.id, token_hash: hash, status: "accepted" }).select("id").single();
+  if (dErr) throw new Error(dErr.message);
+  await audit(email ?? name, "dispatch", "dispatch", d.id);
+  return token;
 }

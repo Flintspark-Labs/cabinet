@@ -120,3 +120,9 @@ export async function revokePat(f: FormData) {
   await supabase.from("personal_access_tokens").delete().eq("id", str(f, "id"));
   revalidatePath("/account");
 }
+
+export async function joinRequest(_: unknown, f: FormData): Promise<Result> {
+  let token: string;
+  try { token = await S.joinByShareToken(str(f, "share"), str(f, "name"), str(f, "email") || null); } catch (e) { return { error: (e as Error).message }; }
+  redirect(`/d/${token}`);
+}

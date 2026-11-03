@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { rateOpinion, pinRequest } from "@/lib/actions";
-import { CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
+import { ShareBox } from "@/components/ShareBox";
+import { appUrl, CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
 
 export default async function BriefingRoom({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await requireUser();
   const { data: r } = await supabase.from("requests")
-    .select("id, rfc_number, class, question, context, return_by, status, pinned, cabinet:cabinets(id, name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
+    .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
     .eq("id", id).maybeSingle();
   if (!r) notFound();
   type D = { id: string; status: string; sent_at: string; resolved_at: string | null; appointment: { display_name: string; portfolio: string | null }; opinion: { id: string; body: string; basis: keyof typeof BASIS_LABEL; authorship: keyof typeof AUTHORSHIP_LABEL; signed_at: string; rating: number | null } | null };
@@ -25,6 +26,10 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
       <p className="status">{r.status} · return by {new Date(r.return_by).toUTCString()}</p>
       <form action={pinRequest} style={{ margin: 0 }}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="pinned" value={String(!r.pinned)} />
         <button className="secondary" style={{ fontSize: "0.85rem", padding: "0.2rem 0.6rem" }}>{r.pinned ? "Unpin (delete 180 days after close)" : "Pin (keep past 180 days)"}</button></form>
+
+      <h2>Share this Request</h2>
+      <p>Send this in a group chat, a text, wherever your people are. No emails to collect.</p>
+      <ShareBox link={`${appUrl()}/r/${r.share_token}`} principal={(r.principal as unknown as { display_name: string | null })?.display_name ?? "A Principal"} rfc={rfcNumber(r.rfc_number)} cls={CLASSES[r.class as RfcClass].label} question={r.question} returnBy={new Date(r.return_by).toUTCString()} />
 
       <h2>Dispatches</h2>
       <table><thead><tr><th>Secretary</th><th>Portfolio</th><th>Status</th><th>Resolved</th></tr></thead>

@@ -12,7 +12,7 @@ export default async function NewRequest({ searchParams }: { searchParams: Promi
     <>
       <p className="docno">Principal</p>
       <h1>Issue a Request for Counsel</h1>
-      <p>One question. Your Secretaries see the question, the class, and the context you add here. Nothing else.</p>
+      <p>One question. Your Secretaries see the question, the class, and the context you add here. Nothing else. Appointed Secretaries are emailed; you also get a share link anyone can open to take a seat, no email required.</p>
       <ActionForm action={issue} submit="Issue and dispatch">
         <label htmlFor="cabinet_id">Cabinet</label>
         <select id="cabinet_id" name="cabinet_id" defaultValue={cabinet} required>{cabinets?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>

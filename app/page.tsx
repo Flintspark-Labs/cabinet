@@ -30,9 +30,9 @@ export default function Home() {
 
       <h2 id="how">The Procedure of Counsel</h2>
       <div className="steps">
-        <div className="card"><h3>Convene</h3><p>Name a Cabinet and appoint Secretaries by email. Give each a Portfolio if you like: "Secretary of Databases." They need no account.</p></div>
+        <div className="card"><h3>Convene</h3><p>Name a Cabinet. Appoint Secretaries by email if you have it, or let them join by link. Give each a Portfolio if you like: "Secretary of Databases." They need no account.</p></div>
         <div className="card"><h3>Issue a Request</h3><p>Ask one question. Pick its class, add the context you are willing to share, and set a return-by date. It becomes RFC-0001.</p></div>
-        <div className="card"><h3>Dispatch</h3><p>Every Secretary receives a private link. They accept or recuse. No reason required.</p></div>
+        <div className="card"><h3>Dispatch</h3><p>Appointed Secretaries get a private link by email. Or share one link in any chat: whoever opens it gives their name and takes a seat. They accept or recuse. No reason required.</p></div>
         <div className="card"><h3>Staff drafts</h3><p>The Secretary pastes the Dispatch Packet into their own AI, or connects it over the Secure Line. Their assistant reads their record on their side and drafts an Opinion under the Standing Orders.</p></div>
         <div className="card"><h3>Sign</h3><p>The Secretary reviews, edits and signs on this site. Every Opinion carries two labels: its Basis and its Signature. Unsigned drafts never leave.</p></div>
         <div className="card"><h3>The Brief</h3><p>When every Dispatch resolves, the Cabinet Office compiles the Brief: every signed Opinion in one document, attributed and labelled. Your own AI can read it over the Secure Line and weigh it for you. The Cabinet Office runs no model of its own.</p></div>

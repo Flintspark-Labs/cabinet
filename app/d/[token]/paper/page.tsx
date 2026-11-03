@@ -16,7 +16,7 @@ export default async function Paper({ params }: { params: Promise<{ token: strin
       <h1>The Dispatch Packet</h1>
       <div className="grid">
         <div>
-          <p><CopyButton text={packet} /></p>
+          <p><CopyButton text={packet} label="Copy the Dispatch Packet" /></p>
           <pre className="packet">{packet}</pre>
         </div>
         <div className="card">

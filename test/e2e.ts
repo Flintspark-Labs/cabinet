@@ -59,6 +59,18 @@ assert.equal(ops[0].secretary, "Ada");
 assert.equal(ops[0].signature, "Staff-Drafted, Signed");
 assert.ok(ops[0].body.includes("Edited at signing"));
 
+// A third person joins by the share link with a name only, then recuses so the RFC still resolves.
+const joinId = Object.entries(manifest.node).find(([, v]) => (v as { exportedName: string }).exportedName === "joinRequest")![0];
+const jf = new FormData();
+jf.set("share", new URL(req.share_url).pathname.split("/r/")[1]); jf.set("name", "Walk-in Wren"); jf.set("email", "");
+jf.set("$ACTION_REF_1", ""); jf.set("$ACTION_1:0", JSON.stringify({ id: joinId, bound: "$@1" })); jf.set("$ACTION_1:1", '["$undefined"]');
+const joinRes = await fetch(BASE + new URL(req.share_url).pathname, { method: "POST", body: jf, redirect: "manual" });
+const joinLoc = joinRes.headers.get("location") ?? "";
+assert.ok(joinRes.status === 303 && joinLoc.startsWith("/d/"), `join redirected: ${joinRes.status} ${joinLoc}`);
+const wrenToken = joinLoc.slice(3);
+assert.equal((await mcp("get_dispatch", { dispatch_token: wrenToken })).json().status, "accepted");
+assert.equal((await mcp("recuse", { dispatch_token: wrenToken })).json().status, "recused");
+
 // Second Secretary recuses; the RFC resolves.
 assert.equal((await mcp("recuse", { dispatch_token: tokens[1] })).json().status, "recused");
 assert.ok((await mcp("get_dispatch", { dispatch_token: tokens[1] })).json().status === "recused");

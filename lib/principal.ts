@@ -29,7 +29,9 @@ export async function appoint(supabase: SupabaseClient, cabinetId: string, s: Se
   if (!validEmail(email) || !name) throw new Error(`Secretary needs a valid email and a name (${s.email}).`);
   const { count } = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("cabinet_id", cabinetId);
   if ((count ?? 0) >= 25) throw new Error("A Cabinet holds at most 25 Secretaries.");
-  const { error } = await supabase.from("appointments").upsert({ cabinet_id: cabinetId, email, display_name: name, portfolio: s.portfolio?.trim() || null }, { onConflict: "cabinet_id,email" });
+  const row = { cabinet_id: cabinetId, email, display_name: name, portfolio: s.portfolio?.trim() || null };
+  const { data: existing } = await supabase.from("appointments").select("id").eq("cabinet_id", cabinetId).eq("email", email).maybeSingle();
+  const { error } = existing ? await supabase.from("appointments").update(row).eq("id", existing.id) : await supabase.from("appointments").insert(row);
   if (error) throw new Error(error.message);
 }
 
@@ -43,25 +45,26 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
     throw new Error("Return-by must be between one hour and 30 days from now.");
 
   const { data: secretaries, error: aErr } = await supabase.from("appointments").select("id, email, display_name, portfolio").eq("cabinet_id", input.cabinet_id);
-  if (aErr || !secretaries?.length) throw new Error("This Cabinet has no Secretaries yet.");
+  if (aErr) throw new Error(aErr.message);
 
   // 50 Dispatches per Principal per day (Article IX).
   const { count } = await db().from("dispatches").select("id, requests!inner(principal_id)", { count: "exact", head: true })
     .eq("requests.principal_id", userId).gte("sent_at", new Date(Date.now() - days).toISOString());
   if ((count ?? 0) + secretaries.length > 50) throw new Error("Daily Dispatch limit reached (50). Try again tomorrow.");
 
-  const { data: optedOut } = await db().from("do_not_dispatch").select("email").in("email", secretaries.map((s) => s.email));
+  const mailable = secretaries.filter((s): s is typeof s & { email: string } => !!s.email);
+  const { data: optedOut } = await db().from("do_not_dispatch").select("email").in("email", mailable.map((s) => s.email));
   const skip = new Set((optedOut ?? []).map((o) => o.email.toLowerCase()));
 
   const { data: req, error } = await supabase.from("requests").insert({
     principal_id: userId, cabinet_id: input.cabinet_id, question, class: input.class as RfcClass, context: input.context.trim(), return_by: returnBy.toISOString(),
-  }).select("id, rfc_number").single();
+  }).select("id, rfc_number, share_token").single();
   if (error) throw new Error(error.message);
   await audit(userId, "issue", "request", req.id);
 
   const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).single();
   let sent = 0;
-  for (const s of secretaries) {
+  for (const s of mailable) {
     if (skip.has(s.email.toLowerCase())) continue;
     const { token, hash } = newToken();
     const { data: d, error: dErr } = await db().from("dispatches").insert({ request_id: req.id, appointment_id: s.id, token_hash: hash }).select("id").single();
@@ -74,5 +77,5 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
     await audit(userId, "dispatch", "dispatch", d.id);
     sent++;
   }
-  return { request_id: req.id as string, rfc_number: req.rfc_number as number, dispatch_count: sent };
+  return { request_id: req.id as string, rfc_number: req.rfc_number as number, dispatch_count: sent, share_url: `${appUrl()}/r/${req.share_token}` };
 }

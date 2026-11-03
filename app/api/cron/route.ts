@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
     .lt("requests.return_by", new Date(now.getTime() + 48 * 3600e3).toISOString());
   for (const d of due ?? []) {
     const r = d.request as unknown as { id: string; rfc_number: number; return_by: string };
-    const a = d.appointment as unknown as { email: string; display_name: string };
+    const a = d.appointment as unknown as { email: string | null; display_name: string };
+    if (!a.email) continue;
     // The token is never stored, so the reminder links to the Request page the Secretary already has in their first email.
     await sendMail(a.email, `Reminder · ${rfcNumber(r.rfc_number)} returns in 48 hours`, reminderEmail({ secretary: a.display_name, rfc_number: r.rfc_number, return_by: r.return_by, link: "Use the link in your original Dispatch email.", email: a.email }));
     out.reminded++;
