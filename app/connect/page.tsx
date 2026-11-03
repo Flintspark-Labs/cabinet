@@ -1,14 +1,20 @@
 import { appUrl } from "@/lib/classes";
 import { CopyButton } from "@/components/CopyButton";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { dispatchByToken } from "@/lib/secretary";
+import Link from "next/link";
 
 export default async function Connect({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   const url = `${appUrl()}/api/mcp`;
+  const d = token ? await dispatchByToken(token) : null;
   return (
     <>
       <p className="docno">The Secure Line</p>
       <h1>Connect your AI to The Cabinet</h1>
       <p>The Secure Line is an MCP server at <code>{url}</code>. Your assistant fetches a Dispatch by its token, drafts under the Standing Orders from your own record, and files the draft. Signing stays a click on this site. No account is needed for Secretary tools.</p>
+      {d?.status === "drafted" && <div className="notice"><p>Your draft is filed. <Link href={`/d/${token}/sign`}>Review and sign it</Link>.</p></div>}
+      {d && ["sent", "accepted"].includes(d.status) && <AutoRefresh />}
       {token && (() => { const prompt = `I have a Cabinet dispatch. Call get_dispatch on The Cabinet with dispatch_token "${token}", follow the Standing Orders in the packet, and draft my Opinion from my own notes and history. Show me the draft before filing anything.`; return (
         <div className="notice">
           <p className="docno">Your prompt, ready to paste into your assistant</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { dispatchByToken, isOpen } from "@/lib/secretary";
 import { acceptDispatch, recuseDispatch } from "@/lib/actions";
 import { CLASSES, rfcNumber, STATUS_LABEL } from "@/lib/classes";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 export default async function DispatchPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ signed?: string }> }) {
   const { token } = await params;
@@ -21,6 +22,8 @@ export default async function DispatchPage({ params, searchParams }: { params: P
       </div>
       {signed && <p className="notice">Your Opinion is signed and filed. {principal} has been notified. Thank you.</p>}
       <p className="status">Status: {STATUS_LABEL[d.status]}</p>
+      {isOpen(d) && <AutoRefresh />}
+      {d.status === "drafted" && <div className="notice"><p>A draft Opinion is filed and waiting for your signature. <Link href={`/d/${token}/sign`}>Review and sign</Link>.</p></div>}
 
       {isOpen(d) && (<>
         <h2>Accept or recuse</h2>

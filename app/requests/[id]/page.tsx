@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { rateOpinion, pinRequest } from "@/lib/actions";
 import { ShareBox } from "@/components/ShareBox";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { appUrl, CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
 
 export default async function BriefingRoom({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +28,7 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
       <form action={pinRequest} style={{ margin: 0 }}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="pinned" value={String(!r.pinned)} />
         <button className="secondary" style={{ fontSize: "0.85rem", padding: "0.2rem 0.6rem" }}>{r.pinned ? "Unpin (delete 180 days after close)" : "Pin (keep past 180 days)"}</button></form>
 
+      {r.status === "open" && <AutoRefresh seconds={10} />}
       <h2>Share this Request</h2>
       <p>Send this in a group chat, a text, wherever your people are. No emails to collect.</p>
       <ShareBox link={`${appUrl()}/r/${r.share_token}`} principal={(r.principal as unknown as { display_name: string | null })?.display_name ?? "A Principal"} rfc={rfcNumber(r.rfc_number)} cls={CLASSES[r.class as RfcClass].label} question={r.question} returnBy={new Date(r.return_by).toUTCString()} />
