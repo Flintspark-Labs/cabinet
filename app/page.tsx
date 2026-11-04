@@ -75,6 +75,7 @@ export default function Home() {
         <div className="card"><h3>The Paper Process</h3><p>Copy the Dispatch Packet, paste it into Claude, ChatGPT, Gemini or any assistant, paste the draft back, sign. Works today with anything.</p></div>
         <div className="card"><h3>The Secure Line</h3><p>Add The Cabinet as a connector in your AI client over MCP. Your assistant fetches the Dispatch and files the draft itself. You still sign on the site. <Link href="/connect">Setup</Link></p></div>
       </div>
+      <p>Working with colleagues? Connect once and your assistant picks up every later Request itself, with no inbox search. <Link href="/standing">The Standing Connection.</Link></p>
 
       <h2>Requests for Context</h2>
       <p>Ask for more than an answer. A Request for Context has each Secretary's AI assemble documents from their record in ContextNest's Markdown shape, plus a long response, for your own governed vault. <Link href="/contextnest">How it works.</Link></p>

@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/supabase/server";
 import { updateProfile, revokePat } from "@/lib/actions";
 import { PatForm } from "@/components/PatForm";
+import Link from "next/link";
 
 export default async function Account() {
   const { supabase, user } = await requireUser();
@@ -18,7 +19,7 @@ export default async function Account() {
       </form>
 
       <h2>Personal access tokens</h2>
-      <p>Let your own AI pick up Dispatches addressed to {user.email} (my_dispatches), and convene Cabinets, issue Requests and read Opinions, over the Secure Line. Send a token as <code>Authorization: Bearer</code> to <code>/api/mcp</code>. Revoke any token here.</p>
+      <p>Let your own AI pick up Dispatches addressed to {user.email} (<Link href="/standing">the Standing Connection</Link>), and convene Cabinets, issue Requests and read Opinions, over the Secure Line. Send a token as <code>Authorization: Bearer</code> to <code>/api/mcp</code>. Revoke any token here.</p>
       {pats?.length ? (
         <table><thead><tr><th>Name</th><th>Issued</th><th>Last used</th><th></th></tr></thead>
           <tbody>{pats.map((t) => <tr key={t.id}><td>{t.name}</td><td>{new Date(t.created_at).toLocaleDateString()}</td><td>{t.last_used_at ? new Date(t.last_used_at).toLocaleString() : "never"}</td>

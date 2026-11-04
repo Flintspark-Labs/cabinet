@@ -23,14 +23,8 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           <p className="small">When the draft is filed, your assistant returns a signing link. Signing is a click on this site.</p>
         </div>); })()}
 
-      <h2>Working with colleagues: connect once, skip the inbox</h2>
-      <p>Inside a team the Cabinet is the roster: a Principal appoints colleagues by their work email, and every later Request reaches them by mail. A Secretary who connects once is picked up directly by their own assistant instead, from any Principal who has them on a Cabinet. Nothing else changes: the assistant drafts from their record, they sign here.</p>
-      <ol className="procedure">
-        <li><Link href="/login">Sign in</Link> with the email your colleagues use for you. Any email works; no Principal duties follow.</li>
-        <li>On <Link href="/account">Account</Link>, create a personal access token.</li>
-        <li>Give it to your assistant as the bearer token for <code>{url}</code>. Claude Code with the plugin: export <code>CABINET_TOKEN</code> in your shell. Other clients: add an <code>Authorization: Bearer</code> header.</li>
-        <li>From then on <code>/check-for-cabinet-requests</code>, or any assistant that calls <code>my_dispatches</code>, lists your open Dispatches with their tokens. No mail search.</li>
-      </ol>
+      <h2>Working with colleagues</h2>
+      <p>Connect once with a personal access token and your assistant picks up every later Dispatch itself, from any colleague who appoints you. No inbox search. <Link href="/standing">The Standing Connection</Link> explains it.</p>
 
       <h2>Claude Code: plugin and a daily check</h2>
       <p>The plugin installs the Secure Line and a <code>/check-for-cabinet-requests</code> skill that searches your connected mail for Dispatches, lists the open ones, and drafts from your own record when you ask. You always sign here.</p>
