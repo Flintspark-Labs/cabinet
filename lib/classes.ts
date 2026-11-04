@@ -13,5 +13,9 @@ export const STATUS_LABEL: Record<string, string> = {
 export const BASIS_LABEL = { record: "From the Record", general: "General Counsel" } as const;
 export const AUTHORSHIP_LABEL = { own_hand: "In Own Hand", staff_drafted: "Staff-Drafted, Signed" } as const;
 
+export const KIND_LABEL = { counsel: "Request for Counsel", context: "Request for Context" } as const;
+export type RequestKind = keyof typeof KIND_LABEL;
+export const BODY_MAX = { counsel: 6000, context: 80000 } as const;
+
 export const rfcNumber = (n: number) => `RFC-${String(n).padStart(4, "0")}`;
 export const appUrl = () => process.env.APP_URL ?? "http://localhost:3000";

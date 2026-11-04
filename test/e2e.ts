@@ -86,4 +86,22 @@ assert.ok((await mcp("get_dispatch", { dispatch_token: tokens[1] })).json().stat
 assert.ok((await mcp("submit_opinion", { dispatch_token: tokens[1], body: "x", basis: "general", authorship: "own_hand" })).isError, "closed dispatch rejects drafts");
 const brief = await mcp("get_brief", { request_id: req.request_id }, PAT);
 console.log("brief:", brief.text.slice(0, 200).replace(/\n/g, " "));
+// Request for Context: packet names ContextNest, pasted block splits into response and documents, documents reach the Principal.
+const creq = (await mcp("issue_request", { cabinet_id: cab.cabinet_id, question: "Everything you learned running ad sales.", class: "handle", context: "", kind: "context", nest_url: "https://example.com/nest", share_max_uses: 1 }, PAT)).json();
+jf.set("share", new URL(creq.share_url).pathname.split("/r/")[1]); jf.set("name", "Context Cal");
+const cj = await fetch(BASE + new URL(creq.share_url).pathname, { method: "POST", body: jf, redirect: "manual" });
+const calToken = (cj.headers.get("location") ?? "").slice(3);
+const cd = (await mcp("get_dispatch", { dispatch_token: calToken })).json();
+assert.equal(cd.kind, "context"); assert.ok(cd.packet.includes("REQUEST FOR CONTEXT") && cd.packet.includes("https://example.com/nest"));
+const pasted = "Basis: From the Record\nResponse:\nWe sold direct for two years.\nDocuments:\n---\ntitle: Direct sales playbook\ntype: playbook\nauthor: Context Cal\nstatus: draft\ntags: [sales]\n---\nStart with the ten shows you already know.";
+const cdraft = (await mcp("submit_opinion", { dispatch_token: calToken, body: pasted, basis: "record", authorship: "staff_drafted" })).json();
+assert.equal(cdraft.status, "drafted");
+const cfd = new FormData(); cfd.set("token", calToken); cfd.set("body", "We sold direct for two years."); cfd.set("basis", "record"); cfd.set("authorship", "staff_drafted"); cfd.set("documents", "---\ntitle: Direct sales playbook\ntype: playbook\nauthor: Context Cal\nstatus: draft\ntags: [sales]\n---\nStart with the ten shows you already know.");
+cfd.set("$ACTION_REF_1", ""); cfd.set("$ACTION_1:0", JSON.stringify({ id: signId, bound: "$@1" })); cfd.set("$ACTION_1:1", '["$undefined"]');
+const cs = await fetch(`${BASE}/d/${calToken}/sign`, { method: "POST", body: cfd, redirect: "manual" });
+assert.equal(cs.status, 303, "context sign redirected");
+const cops = (await mcp("list_opinions", { request_id: creq.request_id }, PAT)).json().opinions;
+assert.equal(cops.length, 1); assert.ok(cops[0].documents.includes("title: Direct sales playbook"), "documents returned to Principal");
+assert.equal(cops[0].body, "We sold direct for two years.");
+
 console.log("E2E OK", { request_id: req.request_id, tokens: tokens.map((t) => t.slice(0, 6) + "…") });

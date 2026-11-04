@@ -76,6 +76,9 @@ export default function Home() {
         <div className="card"><h3>The Secure Line</h3><p>Add The Cabinet as a connector in your AI client over MCP. Your assistant fetches the Dispatch and files the draft itself. You still sign on the site. <Link href="/connect">Setup</Link></p></div>
       </div>
 
+      <h2>Requests for Context</h2>
+      <p>Ask for more than an answer. A Request for Context has each Secretary's AI assemble documents from their record in ContextNest's Markdown shape, plus a long response, for your own governed vault. <Link href="/contextnest">How it works.</Link></p>
+
       <h2>Not a group chat</h2>
       <p>Contexts stay separate by design. No clone answers for a person. No question goes to strangers. No Opinion is sent without a signature.</p>
       <p className="hero" style={{ borderBottom: 0 }}><Link href="/login" className="button">Convene a Cabinet</Link></p>

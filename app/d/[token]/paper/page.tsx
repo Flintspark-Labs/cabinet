@@ -3,13 +3,15 @@ import { dispatchByToken, isOpen, packetFor } from "@/lib/secretary";
 import { submitPaperOpinion } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { CopyButton } from "@/components/CopyButton";
-import { rfcNumber } from "@/lib/classes";
+import { rfcNumber, BODY_MAX } from "@/lib/classes";
 
 export default async function Paper({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const d = await dispatchByToken(token);
   if (!d || !isOpen(d)) return <><h1>Dispatch closed</h1><p><Link href={`/d/${token}`}>Back</Link></p></>;
   const packet = packetFor(d, token);
+  const ctx = d.request.kind === "context";
+  const max = BODY_MAX[d.request.kind];
   return (
     <>
       <p className="docno"><Link href={`/d/${token}`}>{rfcNumber(d.request.rfc_number)}</Link> / The Paper Process</p>
@@ -29,12 +31,16 @@ export default async function Paper({ params }: { params: Promise<{ token: strin
         </div>
       </div>
 
-      <h2>File the Opinion</h2>
+      <h2>{ctx ? "File your contribution" : "File the Opinion"}</h2>
       <p>Paste your assistant's whole reply, or write your own. If the paste starts with its Basis line we read it. Submitting creates an unsigned draft and opens the signing page. Nothing reaches the Principal until you sign there.</p>
       <ActionForm action={submitPaperOpinion} submit="Continue to signing">
         <input type="hidden" name="token" value={token} />
-        <label htmlFor="body">Opinion <small>plain text, up to 6,000 characters. Paste the full block; the Basis line and “Opinion:” label are handled.</small></label>
-        <textarea id="body" name="body" required maxLength={6000} style={{ minHeight: "14rem" }} defaultValue={d.opinion?.body ?? ""} />
+        <label htmlFor="body">{ctx ? "Response" : "Opinion"} <small>plain text, up to {max.toLocaleString()} characters. Paste the full block; the Basis line{ctx ? ", “Response:” label and the Documents section" : " and “Opinion:” label"} are handled.</small></label>
+        <textarea id="body" name="body" required maxLength={max + 400000} style={{ minHeight: "14rem" }} defaultValue={d.opinion?.body ?? ""} />
+        {ctx && (<>
+          <label htmlFor="documents">Documents for the ContextNest <small>optional if they are already in the paste above. Markdown with frontmatter, one after another.</small></label>
+          <textarea id="documents" name="documents" maxLength={400000} style={{ minHeight: "10rem", fontFamily: "var(--mono)", fontSize: "0.85rem" }} defaultValue={d.opinion?.documents ?? ""} />
+        </>)}
         <fieldset><legend>Basis</legend>
           <label><input type="radio" name="basis" value="record" defaultChecked={d.opinion?.basis === "record"} /> From the Record (your own history)</label>
           <label><input type="radio" name="basis" value="general" defaultChecked={d.opinion?.basis === "general"} /> General Counsel (general knowledge)</label>

@@ -3,6 +3,8 @@ import { db } from "./supabase/admin";
 import { hashToken, newToken } from "./token";
 import { audit } from "./audit";
 import { dispatchPacket } from "./packet";
+import { contextPacket, splitContribution } from "./context-packet";
+import { BODY_MAX, type RequestKind } from "./classes";
 import { maybeCompileBrief } from "./brief";
 import { sendMail } from "./mail";
 import { opinionSignedEmail } from "@/emails/opinion-signed";
@@ -15,18 +17,18 @@ export async function dispatchByToken(token: string) {
   if (!token || token.length > 100) return null;
   const { data } = await db()
     .from("dispatches")
-    .select("id, status, channel, request:requests(id, rfc_number, class, question, context, return_by, principal:profiles(display_name)), appointment:appointments(display_name, portfolio, email), opinion:opinions(id, body, basis, authorship, signed_at)")
+    .select("id, status, channel, request:requests(id, rfc_number, class, kind, nest_url, question, context, return_by, principal:profiles(display_name)), appointment:appointments(display_name, portfolio, email), opinion:opinions(id, body, documents, basis, authorship, signed_at)")
     .eq("token_hash", hashToken(token))
     .maybeSingle();
   if (!data) return null;
   const d = data as unknown as {
     id: string; status: string; channel: string | null;
-    request: { id: string; rfc_number: number; class: RfcClass; question: string; context: string; return_by: string; principal: { display_name: string | null } };
+    request: { id: string; rfc_number: number; class: RfcClass; kind: RequestKind; nest_url: string | null; question: string; context: string; return_by: string; principal: { display_name: string | null } };
     appointment: { display_name: string; portfolio: string | null; email: string };
-    opinion: { id: string; body: string; basis: string; authorship: string; signed_at: string | null } | null;
+    opinion: { id: string; body: string; documents: string | null; basis: string; authorship: string; signed_at: string | null } | null;
   };
   d.request.question = open(d.request.question); d.request.context = open(d.request.context);
-  if (d.opinion) d.opinion.body = open(d.opinion.body);
+  if (d.opinion) { d.opinion.body = open(d.opinion.body); d.opinion.documents = d.opinion.documents ? open(d.opinion.documents) : null; }
   // Tokens expire at return_by (Article VI.4).
   if (new Date(d.request.return_by) < new Date() && d.status !== "signed" && d.status !== "recused") {
     if (d.status !== "expired") await db().from("dispatches").update({ status: "expired", resolved_at: new Date().toISOString() }).eq("id", d.id);
@@ -37,12 +39,14 @@ export async function dispatchByToken(token: string) {
 
 export type Dispatch = NonNullable<Awaited<ReturnType<typeof dispatchByToken>>>;
 
-export const packetFor = (d: Dispatch, token: string) =>
-  dispatchPacket({
+export const packetFor = (d: Dispatch, token: string) => {
+  const p = {
     rfc_number: d.request.rfc_number, principal_name: d.request.principal.display_name ?? "A Principal",
     secretary_name: d.appointment.display_name, portfolio: d.appointment.portfolio, class: d.request.class,
     return_by: d.request.return_by, dispatch_token: token, question: d.request.question, context: d.request.context,
-  });
+  };
+  return d.request.kind === "context" ? contextPacket({ ...p, nest_url: d.request.nest_url }) : dispatchPacket(p);
+};
 
 export const isOpen = (d: Dispatch) => ["sent", "accepted", "drafted"].includes(d.status);
 
@@ -61,23 +65,30 @@ export async function recuse(token: string) {
 }
 
 // Creates or replaces the unsigned draft. Never signs (Article V, Secure Line 4).
-export async function submitDraft(token: string, body: string, basis: "record" | "general" | "", authorship: "own_hand" | "staff_drafted", channel: "paper" | "secure_line") {
+export async function submitDraft(token: string, body: string, basis: "record" | "general" | "", authorship: "own_hand" | "staff_drafted", channel: "paper" | "secure_line", documents = "") {
   const d = await dispatchByToken(token);
   if (!d || !isOpen(d)) throw new Error("This Dispatch is closed.");
   ({ body, basis } = parsePasted(body, basis));
-  if (!body || body.length > 6000) throw new Error("The Opinion must be between 1 and 6,000 characters.");
+  body = body.replace(/^\s*Response:\s*\n?/i, "");
+  if (d.request.kind === "context") {
+    const split = splitContribution(body);
+    body = split.body; documents = (documents.trim() || split.documents).trim();
+    if (documents.length > 400000) throw new Error("Documents must be under 400,000 characters.");
+  } else documents = "";
+  const max = BODY_MAX[d.request.kind];
+  if (!body || body.length > max) throw new Error(`The ${d.request.kind === "context" ? "response" : "Opinion"} must be between 1 and ${max.toLocaleString()} characters.`);
   if (!["record", "general"].includes(basis) || !["own_hand", "staff_drafted"].includes(authorship)) throw new Error("Choose a Basis (or paste the block starting with its Basis line) and a Signature.");
-  const { data: op, error } = await db().from("opinions").upsert({ dispatch_id: d.id, body: seal(body), basis, authorship, signed_at: null }, { onConflict: "dispatch_id" }).select("id").single();
+  const { data: op, error } = await db().from("opinions").upsert({ dispatch_id: d.id, body: seal(body), documents: documents ? seal(documents) : null, basis, authorship, signed_at: null }, { onConflict: "dispatch_id" }).select("id").single();
   if (error) throw new Error(error.message);
   await db().from("dispatches").update({ status: "drafted", channel }).eq("id", d.id);
   return { opinion_id: op.id, sign_url: `${appUrl()}/d/${token}/sign` };
 }
 
 // Signing is a human act on the site (Article IV.8). Labels are set at signing.
-export async function sign(token: string, body: string, basis: "record" | "general", authorship: "own_hand" | "staff_drafted") {
+export async function sign(token: string, body: string, basis: "record" | "general", authorship: "own_hand" | "staff_drafted", documents = "") {
   const d = await dispatchByToken(token);
   if (!d || !isOpen(d)) throw new Error("This Dispatch is closed.");
-  await submitDraft(token, body, basis, authorship, (d.channel as "paper" | "secure_line") ?? "paper");
+  await submitDraft(token, body, basis, authorship, (d.channel as "paper" | "secure_line") ?? "paper", documents);
   const now = new Date().toISOString();
   await db().from("opinions").update({ signed_at: now }).eq("dispatch_id", d.id);
   await db().from("dispatches").update({ status: "signed", resolved_at: now }).eq("id", d.id);

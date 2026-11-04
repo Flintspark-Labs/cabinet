@@ -4,7 +4,7 @@ import { newToken } from "./token";
 import { audit } from "./audit";
 import { sendMail } from "./mail";
 import { dispatchEmail } from "@/emails/dispatch";
-import { appUrl, rfcNumber, CLASSES, type RfcClass } from "./classes";
+import { appUrl, rfcNumber, CLASSES, type RfcClass, type RequestKind } from "./classes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { seal } from "./seal";
 
@@ -37,12 +37,15 @@ export async function appoint(supabase: SupabaseClient, cabinetId: string, s: Se
   if (error) throw new Error(error.message);
 }
 
-export async function issueRequest(supabase: SupabaseClient, userId: string, input: { cabinet_id: string; question: string; class: string; context: string; return_by?: string | null; share_max_uses?: number | null }) {
+export async function issueRequest(supabase: SupabaseClient, userId: string, input: { cabinet_id: string; question: string; class: string; context: string; return_by?: string | null; share_max_uses?: number | null; kind?: RequestKind | null; nest_url?: string | null }) {
   const question = input.question.trim();
   if (!question) throw new Error("The question is required.");
   if (!(input.class in CLASSES)) throw new Error("Pick a class.");
   const days = 24 * 3600 * 1000;
-  const returnBy = input.return_by ? new Date(input.return_by) : new Date(Date.now() + 7 * days);
+  const kind: RequestKind = input.kind === "context" ? "context" : "counsel";
+  const nestUrl = input.nest_url?.trim() || null;
+  if (nestUrl && !/^https?:\/\/[^\s]{1,490}$/.test(nestUrl)) throw new Error("The ContextNest link must be an http(s) URL.");
+  const returnBy = input.return_by ? new Date(input.return_by) : new Date(Date.now() + (kind === "context" ? 14 : 7) * days);
   if (isNaN(returnBy.getTime()) || returnBy.getTime() < Date.now() + 1 * 3600 * 1000 || returnBy.getTime() > Date.now() + 30 * days)
     throw new Error("Return-by must be between one hour and 30 days from now.");
   const shareMax = input.share_max_uses == null ? 10 : Math.floor(Number(input.share_max_uses));
@@ -61,7 +64,7 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
   const skip = new Set((optedOut ?? []).map((o) => o.email.toLowerCase()));
 
   const { data: req, error } = await supabase.from("requests").insert({
-    principal_id: userId, cabinet_id: input.cabinet_id, question: seal(question), class: input.class as RfcClass, context: seal(input.context.trim()), return_by: returnBy.toISOString(), share_max_uses: shareMax,
+    principal_id: userId, cabinet_id: input.cabinet_id, question: seal(question), class: input.class as RfcClass, context: seal(input.context.trim()), return_by: returnBy.toISOString(), share_max_uses: shareMax, kind, nest_url: nestUrl,
   }).select("id, rfc_number, share_token, share_max_uses").single();
   if (error) throw new Error(error.message);
   await audit(userId, "issue", "request", req.id);
@@ -74,7 +77,7 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
     const { data: d, error: dErr } = await db().from("dispatches").insert({ request_id: req.id, appointment_id: s.id, token_hash: hash }).select("id").single();
     if (dErr) throw new Error(dErr.message);
     const { count: prior } = await db().from("dispatches").select("id, appointments!inner(email)", { count: "exact", head: true }).eq("appointments.email", s.email).neq("id", d.id);
-    await sendMail(s.email, `Request for Counsel · ${rfcNumber(req.rfc_number)}`, dispatchEmail({
+    await sendMail(s.email, `${kind === "context" ? "Request for Context" : "Request for Counsel"} · ${rfcNumber(req.rfc_number)}`, dispatchEmail({
       first: !prior, secretary: s.display_name, principal: profile?.display_name ?? "A Principal", rfc_number: req.rfc_number,
       cls: input.class as RfcClass, question, return_by: returnBy.toISOString(), link: `${appUrl()}/d/${token}`, email: s.email,
     }));

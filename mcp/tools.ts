@@ -20,20 +20,21 @@ export function registerTools(server: McpServer) {
   }, async ({ dispatch_token }) => {
     const d = await S.dispatchByToken(dispatch_token);
     if (!d) return fail("No such Dispatch.");
-    return json({ rfc: rfcNumber(d.request.rfc_number), class: CLASSES[d.request.class].label, return_by: d.request.return_by, status: d.status, packet: S.packetFor(d, dispatch_token) });
+    return json({ rfc: rfcNumber(d.request.rfc_number), kind: d.request.kind, class: CLASSES[d.request.class].label, return_by: d.request.return_by, status: d.status, packet: S.packetFor(d, dispatch_token) });
   });
 
   server.registerTool("submit_opinion", {
     title: "Submit Opinion (draft)", description: "File an unsigned draft Opinion for a Dispatch. Creates a draft only; the Secretary must open the returned sign_url and sign on the site before anything reaches the Principal. Plain text, under 6,000 characters.",
     inputSchema: z.object({
       dispatch_token: z.string().min(10).max(100),
-      body: z.string().min(1).max(6000),
+      body: z.string().min(1).max(80000).describe("The Opinion, or for a Request for Context the written response"),
       basis: z.enum(["record", "general"]).describe("record = From the Record (the user's own history); general = General Counsel"),
       authorship: z.enum(["own_hand", "staff_drafted"]).describe("staff_drafted when you drafted it; own_hand when the user wrote it"),
+      documents: z.string().max(400000).optional().describe("Requests for Context only: the ContextNest documents, Markdown with frontmatter, one after another"),
     }),
-  }, async ({ dispatch_token, body, basis, authorship }) => {
+  }, async ({ dispatch_token, body, basis, authorship, documents }) => {
     try {
-      const r = await S.submitDraft(dispatch_token, body, basis, authorship, "secure_line");
+      const r = await S.submitDraft(dispatch_token, body, basis, authorship, "secure_line", documents ?? "");
       return json({ ...r, status: "drafted", next: "Give your user the sign_url. Signing is a human act on the site." });
     } catch (e) { return fail((e as Error).message, e); }
   });
@@ -74,12 +75,12 @@ export function registerTools(server: McpServer) {
 
   server.registerTool("issue_request", {
     title: "Issue Request for Counsel", description: "Issue an RFC to a Cabinet. Emails every appointed Secretary and returns a share_url anyone can open to take a seat by name. Requires a Principal personal access token.",
-    inputSchema: z.object({ cabinet_id: z.string().uuid(), question: z.string().min(1).max(2000), class: z.enum(["recommend", "handle", "find", "weigh_in", "coordinate"]), context: z.string().max(4000).default(""), return_by: z.string().datetime({ offset: true }).optional().describe("ISO 8601; default 7 days, maximum 30"), share_max_uses: z.number().int().min(0).max(25).optional().describe("Seats available through share_url; default 10, 0 disables the link. Set it to the number of name-only invitees when you know it.") }),
+    inputSchema: z.object({ cabinet_id: z.string().uuid(), question: z.string().min(1).max(2000), class: z.enum(["recommend", "handle", "find", "weigh_in", "coordinate"]), context: z.string().max(4000).default(""), return_by: z.string().datetime({ offset: true }).optional().describe("ISO 8601; default 7 days, maximum 30"), share_max_uses: z.number().int().min(0).max(25).optional().describe("Seats available through share_url; default 10, 0 disables the link. Set it to the number of name-only invitees when you know it."), kind: z.enum(["counsel", "context"]).default("counsel").describe("context = Request for Context: Secretaries contribute a long response plus ContextNest documents"), nest_url: z.string().url().max(500).optional().describe("The Principal's ContextNest link, shown to Secretaries") }),
   }, async (input, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
     const { data: cab } = await db().from("cabinets").select("id").eq("id", input.cabinet_id).eq("principal_id", pid).maybeSingle();
     if (!cab) return fail("No such Cabinet.");
-    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null, share_max_uses: input.share_max_uses ?? null })); } catch (e) { return fail((e as Error).message, e); }
+    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null, share_max_uses: input.share_max_uses ?? null, nest_url: input.nest_url ?? null })); } catch (e) { return fail((e as Error).message, e); }
   });
 
   const ownRequest = async (pid: string, id: string) => (await db().from("requests").select("id, rfc_number, status").eq("id", id).eq("principal_id", pid).maybeSingle()).data;
@@ -90,10 +91,10 @@ export function registerTools(server: McpServer) {
   }, async ({ request_id }, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
     const req = await ownRequest(pid, request_id); if (!req) return fail("No such Request.");
-    const { data } = await db().from("opinions").select("body, basis, authorship, signed_at, rating, dispatch:dispatches!inner(request_id, appointment:appointments(display_name, portfolio))").eq("dispatch.request_id", request_id).not("signed_at", "is", null);
+    const { data } = await db().from("opinions").select("body, documents, basis, authorship, signed_at, rating, dispatch:dispatches!inner(request_id, appointment:appointments(display_name, portfolio))").eq("dispatch.request_id", request_id).not("signed_at", "is", null);
     return json({ rfc: rfcNumber(req.rfc_number), opinions: (data ?? []).map((o) => {
       const a = (o.dispatch as unknown as { appointment: { display_name: string; portfolio: string | null } }).appointment;
-      return { secretary: a.display_name, portfolio: a.portfolio, basis: BASIS_LABEL[o.basis as keyof typeof BASIS_LABEL], signature: AUTHORSHIP_LABEL[o.authorship as keyof typeof AUTHORSHIP_LABEL], signed_at: o.signed_at, rating: o.rating, body: open(o.body) };
+      return { secretary: a.display_name, portfolio: a.portfolio, basis: BASIS_LABEL[o.basis as keyof typeof BASIS_LABEL], signature: AUTHORSHIP_LABEL[o.authorship as keyof typeof AUTHORSHIP_LABEL], signed_at: o.signed_at, rating: o.rating, body: open(o.body), documents: o.documents ? open(o.documents) : undefined };
     }) });
   });
 

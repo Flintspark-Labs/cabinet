@@ -2,7 +2,7 @@ import Link from "next/link";
 import { dispatchByToken, isOpen } from "@/lib/secretary";
 import { signOpinion } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
-import { rfcNumber } from "@/lib/classes";
+import { rfcNumber, BODY_MAX } from "@/lib/classes";
 
 export default async function Sign({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -17,8 +17,12 @@ export default async function Sign({ params }: { params: Promise<{ token: string
       <p>Read every line. Remove anything you would not say to {d.request.principal.display_name ?? "the Principal"} in person. Names, figures and anything confidential should already be gone; check. Signing is the only act that sends the Opinion.</p>
       <ActionForm action={signOpinion} submit="Sign and send">
         <input type="hidden" name="token" value={token} />
-        <label htmlFor="body">Opinion</label>
-        <textarea id="body" name="body" required maxLength={6000} style={{ minHeight: "18rem" }} defaultValue={d.opinion.body} />
+        <label htmlFor="body">{d.request.kind === "context" ? "Response" : "Opinion"}</label>
+        <textarea id="body" name="body" required maxLength={BODY_MAX[d.request.kind]} style={{ minHeight: "18rem" }} defaultValue={d.opinion.body} />
+        {d.request.kind === "context" && (<>
+          <label htmlFor="documents">Documents for the ContextNest <small>read every one; they carry your name as author</small></label>
+          <textarea id="documents" name="documents" maxLength={400000} style={{ minHeight: "14rem", fontFamily: "var(--mono)", fontSize: "0.85rem" }} defaultValue={d.opinion.documents ?? ""} />
+        </>)}
         <fieldset><legend>Basis</legend>
           <label><input type="radio" name="basis" value="record" required defaultChecked={d.opinion.basis === "record"} /> From the Record</label>
           <label><input type="radio" name="basis" value="general" defaultChecked={d.opinion.basis === "general"} /> General Counsel</label>

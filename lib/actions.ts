@@ -53,7 +53,7 @@ export async function issue(_: unknown, f: FormData): Promise<Result> {
   const { supabase, user } = await requireUser();
   let r: { request_id: string };
   try {
-    r = await P.issueRequest(supabase, user.id, { cabinet_id: str(f, "cabinet_id"), question: str(f, "question"), class: str(f, "class"), context: str(f, "context"), return_by: str(f, "return_by") || null, share_max_uses: str(f, "share_max_uses") === "" ? null : Number(str(f, "share_max_uses")) });
+    r = await P.issueRequest(supabase, user.id, { cabinet_id: str(f, "cabinet_id"), question: str(f, "question"), class: str(f, "class"), context: str(f, "context"), return_by: str(f, "return_by") || null, share_max_uses: str(f, "share_max_uses") === "" ? null : Number(str(f, "share_max_uses")), kind: str(f, "kind") === "context" ? "context" : "counsel", nest_url: str(f, "nest_url") || null });
   } catch (e) { return { error: (e as Error).message }; }
   redirect(`/requests/${r.request_id}`);
 }
@@ -99,13 +99,13 @@ export async function recuseDispatch(f: FormData) {
 
 export async function submitPaperOpinion(_: unknown, f: FormData): Promise<Result> {
   const token = str(f, "token");
-  try { await S.submitDraft(token, str(f, "body"), str(f, "basis") as "record", str(f, "authorship") as "own_hand", "paper"); } catch (e) { return { error: (e as Error).message }; }
+  try { await S.submitDraft(token, str(f, "body"), str(f, "basis") as "record", str(f, "authorship") as "own_hand", "paper", str(f, "documents")); } catch (e) { return { error: (e as Error).message }; }
   redirect(`/d/${token}/sign`);
 }
 
 export async function signOpinion(_: unknown, f: FormData): Promise<Result> {
   const token = str(f, "token");
-  try { await S.sign(token, str(f, "body"), str(f, "basis") as "record", str(f, "authorship") as "own_hand"); } catch (e) { return { error: (e as Error).message }; }
+  try { await S.sign(token, str(f, "body"), str(f, "basis") as "record", str(f, "authorship") as "own_hand", str(f, "documents")); } catch (e) { return { error: (e as Error).message }; }
   redirect(`/d/${token}?signed=1`);
 }
 

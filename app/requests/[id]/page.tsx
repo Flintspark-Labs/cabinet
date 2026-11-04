@@ -6,26 +6,29 @@ import { ShareBox } from "@/components/ShareBox";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { open } from "@/lib/seal";
 import { Stamp } from "@/components/Stamp";
-import { appUrl, CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
+import { CopyButton } from "@/components/CopyButton";
+import { appUrl, KIND_LABEL, type RequestKind, CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
 
 export default async function BriefingRoom({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await requireUser();
   const { data: r } = await supabase.from("requests")
-    .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, share_uses, share_max_uses, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
+    .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, share_uses, share_max_uses, kind, nest_url, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, documents, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
     .eq("id", id).maybeSingle();
   if (!r) notFound();
   r.question = open(r.question); r.context = open(r.context);
-  type D = { id: string; status: string; sent_at: string; resolved_at: string | null; appointment: { display_name: string; portfolio: string | null }; opinion: { id: string; body: string; basis: keyof typeof BASIS_LABEL; authorship: keyof typeof AUTHORSHIP_LABEL; signed_at: string; rating: number | null } | null };
+  type D = { id: string; status: string; sent_at: string; resolved_at: string | null; appointment: { display_name: string; portfolio: string | null }; opinion: { id: string; body: string; documents: string | null; basis: keyof typeof BASIS_LABEL; authorship: keyof typeof AUTHORSHIP_LABEL; signed_at: string; rating: number | null } | null };
   const dispatches = r.dispatches as unknown as D[];
   const cabinet = r.cabinet as unknown as { id: string; name: string };
   const brief = r.brief as unknown as { body: string; model: string; created_at: string } | null;
   const signed = dispatches.filter((d) => d.opinion?.signed_at);
-  for (const d of signed) d.opinion!.body = open(d.opinion!.body);
+  for (const d of signed) { d.opinion!.body = open(d.opinion!.body); d.opinion!.documents = d.opinion!.documents ? open(d.opinion!.documents) : null; }
+  const bundle = signed.map((d) => d.opinion!.documents).filter(Boolean).join("\n\n");
   if (brief) brief.body = open(brief.body);
   return (
     <>
       <p className="docno"><Link href="/cabinets">Cabinets</Link> / <Link href={`/cabinets/${cabinet.id}`}>{cabinet.name}</Link> / Briefing Room</p>
+      <p className="docno">{KIND_LABEL[r.kind as RequestKind]}{r.nest_url && <> · <a href={r.nest_url}>ContextNest</a></>}</p>
       <h1>{rfcNumber(r.rfc_number)} · {CLASSES[r.class as RfcClass].label}</h1>
       <p className="lede">{r.question}</p>
       {r.context && <p><em>Context shared:</em> {r.context}</p>}
@@ -50,7 +53,8 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
           <article className="card stamped" key={d.id}>
             <h3 style={{ marginTop: 0 }}>{d.appointment.display_name}{d.appointment.portfolio ? `, ${d.appointment.portfolio}` : ""}</h3>
             <div className="labels"><span className="label">{BASIS_LABEL[o.basis]}</span><span className="label seal">{AUTHORSHIP_LABEL[o.authorship]}</span><span className="label">Signed {new Date(o.signed_at).toLocaleString()}</span></div>
-            <div className="opinion" style={{ paddingBottom: "2.6rem" }}>{o.body}</div>
+            <div className="opinion" style={{ paddingBottom: o.documents ? "0.5rem" : "2.6rem" }}>{o.body}</div>
+            {o.documents && <details style={{ marginBottom: "2.4rem" }}><summary>Documents for your ContextNest</summary><pre className="packet">{o.documents}</pre><p><CopyButton text={o.documents} label="Copy documents" /></p></details>}
             <Stamp text="Signed" sub={new Date(o.signed_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} small />
             <form action={rateOpinion} className="rating" style={{ marginTop: "0.8rem" }}>
               <input type="hidden" name="id" value={o.id} /><input type="hidden" name="request_id" value={r.id} />
@@ -60,6 +64,8 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
           </article>
         );
       })}
+
+      {r.kind === "context" && bundle && (<><h2>ContextNest bundle</h2><p>Every signed document in one block, ready to drop into your nest. A steward there approves each before it is used.</p><p><CopyButton text={bundle} label="Copy all documents" /></p></>)}
 
       <h2>The Brief</h2>
       {brief ? (<>
