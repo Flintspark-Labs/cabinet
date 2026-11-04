@@ -29,6 +29,14 @@ footer .bar { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem; display
 .works { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.4rem; margin-top: 1.4rem; }
 .works .docno { width: 100%; margin-bottom: 0.2rem; }
 .works .label { background: var(--card); }
+.flow { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: f; }
+.flow li { position: relative; text-align: center; padding: 0.5rem 1.6rem 0.5rem 0.6rem; color: var(--ink); }
+.flow li svg { color: var(--seal); display: block; margin: 0 auto 0.4rem; }
+.flow li strong { display: block; font-family: var(--serif); font-size: 1.1rem; }
+.flow li strong::before { counter-increment: f; content: counter(f) ". "; color: var(--seal); }
+.flow li span { display: block; font-size: 0.9rem; color: var(--muted); }
+.flow li:not(:last-child)::after { content: "→"; position: absolute; right: 0; top: 0.9rem; font-family: var(--serif); font-size: 1.4rem; color: var(--rule); }
+@media (max-width: 640px) { .flow { grid-template-columns: 1fr; } .flow li { padding: 0.6rem 0.6rem 1.6rem; } .flow li:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: 0; transform: translateX(50%); } }
 .card { background: var(--card); border: 1px solid var(--rule); padding: 1.25rem 1.5rem; margin: 1rem 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }

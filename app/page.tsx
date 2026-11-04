@@ -4,6 +4,7 @@ import { TiltSeal } from "@/components/TiltSeal";
 import { Reveal } from "@/components/Reveal";
 import { CLASSES } from "@/lib/classes";
 import { SecretaryExhibit, SignExhibit, PrincipalExhibit } from "@/components/Exhibits";
+import { Flow } from "@/components/Flow";
 
 export default function Home() {
   return (
@@ -19,11 +20,13 @@ export default function Home() {
         <p className="works"><span className="docno">Works with the assistant they already use</span>{["Claude", "ChatGPT", "Gemini", "Copilot", "Claude Code", "Cursor", "Any MCP client"].map((n) => <span key={n} className="label">{n}</span>)}</p>
       </section>
 
+      <Flow />
+
       <h2 id="why">Your friend's AI brain</h2>
       <p>Ask a friend for advice and you get what they remember over coffee. Their real experience is somewhere else now: in the AI that has read their email, their docs, their notes, the decisions they made and how they turned out. That brain knows more than they can recall, and they would never hand it to you.</p>
       <p>The Cabinet is the line between your question and that brain. You ask the people you trust. Each person's own assistant, whichever one they use, answers from that person's own record, on their side. The person reads it, edits it and signs it. Only the signed Opinion reaches you. Their sources never do.</p>
 
-      <h2 id="see">What it looks like on the Secure Line</h2>
+      <h2 id="see">See it work</h2>
       <p>A Secretary adds The Cabinet as a connector in their own AI. The assistant fetches the Dispatch, reads their record where it already lives, drafts under the Standing Orders, and files a draft. The person signs on the site. Only the signed Opinion ever leaves.</p>
       <p className="flowline">1. The Secretary's own AI drafts from their record</p>
       <SecretaryExhibit />
@@ -33,7 +36,7 @@ export default function Home() {
       <PrincipalExhibit />
       <p>No connector? The Paper Process does the same thing by copy and paste, with any assistant. <a href="/connect">Connector setup for Claude, ChatGPT and any MCP client.</a></p>
 
-      <h2 id="how">The Procedure of Counsel</h2>
+      <h2 id="how">The Procedure of Counsel, in full</h2>
       <div className="steps">
         <div className="card"><h3>Convene</h3><p>Name a Cabinet. Appoint Secretaries by email if you have it, or let them join by link. Give each a Portfolio if you like: "Secretary of Databases." They need no account.</p></div>
         <div className="card"><h3>Issue a Request</h3><p>Ask one question. Pick its class, add the context you are willing to share, and set a return-by date. It becomes RFC-0001.</p></div>
@@ -71,7 +74,7 @@ export default function Home() {
         <div className="card"><h3>Deleted</h3><p>Requests, Dispatches, Opinions and the Brief are deleted 30 days after a Request closes, unless you pin it.</p></div>
       </div>
 
-      <h2>Two channels</h2>
+      <h2>Two ways to connect their AI</h2>
       <div className="grid">
         <div className="card"><h3>The Paper Process</h3><p>Copy the Dispatch Packet, paste it into Claude, ChatGPT, Gemini or any assistant, paste the draft back, sign. Works today with anything.</p></div>
         <div className="card"><h3>The Secure Line</h3><p>Add The Cabinet as a connector in your AI client over MCP. Your assistant fetches the Dispatch and files the draft itself. You still sign on the site. <Link href="/connect">Setup</Link></p></div>
@@ -83,7 +86,7 @@ export default function Home() {
 
       <h2>Not a group chat</h2>
       <p>Contexts stay separate by design. No clone answers for a person. No question goes to strangers. No Opinion is sent without a signature.</p>
-      <p className="hero" style={{ borderBottom: 0 }}><Link href="/login" className="button">Convene a Cabinet</Link></p>
+      <p className="hero" style={{ borderBottom: 0 }}><Link href="/login" className="button">Convene a Cabinet</Link> <Link href="/standing" className="button secondary">Connect your AI to serve on one</Link></p>
     </>
   );
 }
