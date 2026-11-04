@@ -6,8 +6,8 @@ export function Seal({ size = 120 }: { size?: number }) {
       <circle cx="60" cy="60" r="56" fill="none" stroke="#7a1f1f" strokeWidth="2.5" />
       <circle cx="60" cy="60" r="51" fill="none" stroke="#7a1f1f" strokeWidth="0.8" />
       <circle cx="60" cy="60" r="35" fill="none" stroke="#7a1f1f" strokeWidth="1.2" />
-      <text fontFamily="Georgia, serif" fontSize="8.2" fill="#7a1f1f" letterSpacing="2.4" fontWeight="700">
-        <textPath href="#ring" startOffset="2%">THE CABINET · COUNSEL SIGNED BY HAND · FLINTSPARK LABS ·</textPath>
+      <text fontFamily="Georgia, serif" fontSize="8.4" fill="#7a1f1f" fontWeight="700">
+        <textPath href="#ring" textLength="274" lengthAdjust="spacing">THE CABINET · COUNSEL SIGNED BY HAND ·</textPath>
       </text>
       <g stroke="#7a1f1f" strokeWidth="2" fill="none" strokeLinecap="round">
         <path d="M42 78 L78 78" />
