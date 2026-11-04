@@ -26,6 +26,11 @@ Kept by the build agent so a later session can pick up without re-deriving.
 ## Domain
 - Live at https://cabinet.flintsparklabs.com since 2026-11-03 (Cloudflare CNAME `cabinet` -> 9dcf01da54dbd149.vercel-dns-016.com, DNS only). APP_URL and Supabase site_url point there; the vercel.app URL still works.
 
+## Where we stopped (2026-11-03 evening)
+Resend: RESEND_API_KEY and MAIL_FROM ("The Cabinet <cabinet@flintsparklabs.com>") are set in Vercel and deployed. flintsparklabs.com is added in Resend (domain id 84f66958-89f9-462e-8e87-de5dd5fa9568); Flint added the 4 DNS records at Cloudflare and they resolve. NEXT: POST /domains/<id>/verify with the key from .env.local, poll until status "verified", then issue a real test Request to flint@frequency.media (sign in at /login, or via MCP with the e2e PAT and a cabinet containing his email) and confirm delivery in Resend logs. Then point Supabase Auth SMTP at Resend (smtp.resend.com:465, user "resend", pass = key, sender cabinet@flintsparklabs.com) via the management API PATCH /config/auth, and announce_done.
+
+Awaiting Flint's answers: keep audit_log rows after dissolve (built that way); keep/cut/reword/build the ContextNest "deeper integration" line on /contextnest; repo is public, go/no-go on keeping it so; which mobile animation he expected.
+
 ## Open
 - Supabase default auth mailer is limited to 2 emails/hour. Set custom SMTP (Resend) in Supabase Auth once a sending domain is verified.
 - Final name and domain not chosen. When chosen: add domain in Vercel, update APP_URL, Supabase site URL and allow-list.
