@@ -94,19 +94,25 @@ export async function joinByShareToken(share: string, name: string, email: strin
   email = email?.trim().toLowerCase() || null;
   if (!name) throw new Error("Your name is required.");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("That email does not look right.");
-  const { data: req } = await db().from("requests").select("id, cabinet_id, principal_id, return_by, status").eq("share_token", share).maybeSingle();
-  if (!req || req.status !== "open" || new Date(req.return_by) < new Date()) throw new Error("This Request is closed.");
   if (email && (await db().from("do_not_dispatch").select("email").eq("email", email).maybeSingle()).data) throw new Error("That address has opted out of The Cabinet.");
+  // One atomic UPDATE claims a seat; it returns nothing when the link is closed or used up.
+  const { data: claimed } = await db().rpc("claim_share_seat", { share }).maybeSingle();
+  const req = claimed as { id: string; cabinet_id: string; principal_id: string } | null;
+  if (!req) {
+    const { data: r } = await db().from("requests").select("status, return_by, share_uses, share_max_uses").eq("share_token", share).maybeSingle();
+    throw new Error(r && r.status === "open" && new Date(r.return_by) > new Date() ? `This link has been used ${r.share_max_uses} of ${r.share_max_uses} times. Ask the Principal to raise the limit.` : "This Request is closed.");
+  }
+  const release = async (msg: string) => { await db().rpc("release_share_seat", { req: req.id }); throw new Error(msg); };
   const { count } = await db().from("appointments").select("id", { count: "exact", head: true }).eq("cabinet_id", req.cabinet_id);
-  if ((count ?? 0) >= 25) throw new Error("This Cabinet is full (25 Secretaries).");
+  if ((count ?? 0) >= 25) await release("This Cabinet is full (25 Secretaries).");
   const { count: today } = await db().from("dispatches").select("id, requests!inner(principal_id)", { count: "exact", head: true })
     .eq("requests.principal_id", req.principal_id).gte("sent_at", new Date(Date.now() - 86400e3).toISOString());
-  if ((today ?? 0) >= 50) throw new Error("This Principal's daily Dispatch limit is reached. Try tomorrow.");
+  if ((today ?? 0) >= 50) await release("This Principal's daily Dispatch limit is reached. Try tomorrow.");
   const { data: appt, error } = await db().from("appointments").insert({ cabinet_id: req.cabinet_id, email, display_name: name }).select("id").single();
-  if (error) throw new Error(error.code === "23505" ? "Someone with that email already joined this Cabinet. Use the link from your email, or join without an email." : error.message);
+  if (error || !appt) await release(error?.code === "23505" ? "Someone with that email already joined this Cabinet. Use the link from your email, or join without an email." : error?.message ?? "Could not take a seat.");
   const { token, hash } = newToken();
-  const { data: d, error: dErr } = await db().from("dispatches").insert({ request_id: req.id, appointment_id: appt.id, token_hash: hash, status: "accepted" }).select("id").single();
-  if (dErr) throw new Error(dErr.message);
-  await audit(email ?? name, "dispatch", "dispatch", d.id);
+  const { data: d, error: dErr } = await db().from("dispatches").insert({ request_id: req.id, appointment_id: appt!.id, token_hash: hash, status: "accepted" }).select("id").single();
+  if (dErr || !d) await release(dErr?.message ?? "Could not create the Dispatch.");
+  await audit(email ?? name, "dispatch", "dispatch", d!.id);
   return token;
 }

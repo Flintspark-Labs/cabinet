@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
-import { rateOpinion, pinRequest } from "@/lib/actions";
+import { rateOpinion, pinRequest, setShareMax } from "@/lib/actions";
 import { ShareBox } from "@/components/ShareBox";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { open } from "@/lib/seal";
@@ -12,7 +12,7 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const { supabase } = await requireUser();
   const { data: r } = await supabase.from("requests")
-    .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
+    .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, share_uses, share_max_uses, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
     .eq("id", id).maybeSingle();
   if (!r) notFound();
   r.question = open(r.question); r.context = open(r.context);
@@ -36,7 +36,7 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
       {r.status === "open" && <AutoRefresh seconds={10} />}
       <h2>Share this Request</h2>
       <p>Send this in a group chat, a text, wherever your people are. No emails to collect.</p>
-      <ShareBox link={`${appUrl()}/r/${r.share_token}`} principal={(r.principal as unknown as { display_name: string | null })?.display_name ?? "A Principal"} rfc={rfcNumber(r.rfc_number)} cls={CLASSES[r.class as RfcClass].label} question={r.question} returnBy={new Date(r.return_by).toUTCString()} />
+      <ShareBox link={`${appUrl()}/r/${r.share_token}`} principal={(r.principal as unknown as { display_name: string | null })?.display_name ?? "A Principal"} rfc={rfcNumber(r.rfc_number)} cls={CLASSES[r.class as RfcClass].label} question={r.question} returnBy={new Date(r.return_by).toUTCString()} uses={r.share_uses} max={r.share_max_uses} requestId={r.id} setMax={setShareMax} />
 
       <h2>Dispatches</h2>
       <table><thead><tr><th>Secretary</th><th>Portfolio</th><th>Status</th><th>Resolved</th></tr></thead>

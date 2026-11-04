@@ -74,12 +74,12 @@ export function registerTools(server: McpServer) {
 
   server.registerTool("issue_request", {
     title: "Issue Request for Counsel", description: "Issue an RFC to a Cabinet. Emails every appointed Secretary and returns a share_url anyone can open to take a seat by name. Requires a Principal personal access token.",
-    inputSchema: z.object({ cabinet_id: z.string().uuid(), question: z.string().min(1).max(2000), class: z.enum(["recommend", "handle", "find", "weigh_in", "coordinate"]), context: z.string().max(4000).default(""), return_by: z.string().datetime({ offset: true }).optional().describe("ISO 8601; default 7 days, maximum 30") }),
+    inputSchema: z.object({ cabinet_id: z.string().uuid(), question: z.string().min(1).max(2000), class: z.enum(["recommend", "handle", "find", "weigh_in", "coordinate"]), context: z.string().max(4000).default(""), return_by: z.string().datetime({ offset: true }).optional().describe("ISO 8601; default 7 days, maximum 30"), share_max_uses: z.number().int().min(0).max(25).optional().describe("Seats available through share_url; default 10, 0 disables the link. Set it to the number of name-only invitees when you know it.") }),
   }, async (input, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
     const { data: cab } = await db().from("cabinets").select("id").eq("id", input.cabinet_id).eq("principal_id", pid).maybeSingle();
     if (!cab) return fail("No such Cabinet.");
-    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null })); } catch (e) { return fail((e as Error).message, e); }
+    try { return json(await P.issueRequest(db(), pid, { ...input, return_by: input.return_by ?? null, share_max_uses: input.share_max_uses ?? null })); } catch (e) { return fail((e as Error).message, e); }
   });
 
   const ownRequest = async (pid: string, id: string) => (await db().from("requests").select("id, rfc_number, status").eq("id", id).eq("principal_id", pid).maybeSingle()).data;

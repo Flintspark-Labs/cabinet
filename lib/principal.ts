@@ -37,7 +37,7 @@ export async function appoint(supabase: SupabaseClient, cabinetId: string, s: Se
   if (error) throw new Error(error.message);
 }
 
-export async function issueRequest(supabase: SupabaseClient, userId: string, input: { cabinet_id: string; question: string; class: string; context: string; return_by?: string | null }) {
+export async function issueRequest(supabase: SupabaseClient, userId: string, input: { cabinet_id: string; question: string; class: string; context: string; return_by?: string | null; share_max_uses?: number | null }) {
   const question = input.question.trim();
   if (!question) throw new Error("The question is required.");
   if (!(input.class in CLASSES)) throw new Error("Pick a class.");
@@ -45,6 +45,8 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
   const returnBy = input.return_by ? new Date(input.return_by) : new Date(Date.now() + 7 * days);
   if (isNaN(returnBy.getTime()) || returnBy.getTime() < Date.now() + 1 * 3600 * 1000 || returnBy.getTime() > Date.now() + 30 * days)
     throw new Error("Return-by must be between one hour and 30 days from now.");
+  const shareMax = input.share_max_uses == null ? 10 : Math.floor(Number(input.share_max_uses));
+  if (!Number.isFinite(shareMax) || shareMax < 0 || shareMax > 25) throw new Error("Share link uses must be between 0 and 25.");
 
   const { data: secretaries, error: aErr } = await supabase.from("appointments").select("id, email, display_name, portfolio").eq("cabinet_id", input.cabinet_id);
   if (aErr) throw new Error(aErr.message);
@@ -59,8 +61,8 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
   const skip = new Set((optedOut ?? []).map((o) => o.email.toLowerCase()));
 
   const { data: req, error } = await supabase.from("requests").insert({
-    principal_id: userId, cabinet_id: input.cabinet_id, question: seal(question), class: input.class as RfcClass, context: seal(input.context.trim()), return_by: returnBy.toISOString(),
-  }).select("id, rfc_number, share_token").single();
+    principal_id: userId, cabinet_id: input.cabinet_id, question: seal(question), class: input.class as RfcClass, context: seal(input.context.trim()), return_by: returnBy.toISOString(), share_max_uses: shareMax,
+  }).select("id, rfc_number, share_token, share_max_uses").single();
   if (error) throw new Error(error.message);
   await audit(userId, "issue", "request", req.id);
 
@@ -79,5 +81,5 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
     await audit(userId, "dispatch", "dispatch", d.id);
     sent++;
   }
-  return { request_id: req.id as string, rfc_number: req.rfc_number as number, dispatch_count: sent, share_url: `${appUrl()}/r/${req.share_token}` };
+  return { request_id: req.id as string, rfc_number: req.rfc_number as number, dispatch_count: sent, share_url: `${appUrl()}/r/${req.share_token}`, share_max_uses: req.share_max_uses as number };
 }

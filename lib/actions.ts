@@ -53,7 +53,7 @@ export async function issue(_: unknown, f: FormData): Promise<Result> {
   const { supabase, user } = await requireUser();
   let r: { request_id: string };
   try {
-    r = await P.issueRequest(supabase, user.id, { cabinet_id: str(f, "cabinet_id"), question: str(f, "question"), class: str(f, "class"), context: str(f, "context"), return_by: str(f, "return_by") || null });
+    r = await P.issueRequest(supabase, user.id, { cabinet_id: str(f, "cabinet_id"), question: str(f, "question"), class: str(f, "class"), context: str(f, "context"), return_by: str(f, "return_by") || null, share_max_uses: str(f, "share_max_uses") === "" ? null : Number(str(f, "share_max_uses")) });
   } catch (e) { return { error: (e as Error).message }; }
   redirect(`/requests/${r.request_id}`);
 }
@@ -62,6 +62,13 @@ export async function rateOpinion(f: FormData) {
   const { supabase } = await requireUser();
   await supabase.from("opinions").update({ rating: Number(str(f, "rating")) }).eq("id", str(f, "id"));
   revalidatePath(`/requests/${str(f, "request_id")}`);
+}
+
+export async function setShareMax(f: FormData) {
+  const { supabase } = await requireUser();
+  const n = Math.floor(Number(str(f, "share_max_uses")));
+  if (Number.isFinite(n) && n >= 0 && n <= 25) await supabase.from("requests").update({ share_max_uses: n }).eq("id", str(f, "id"));
+  revalidatePath(`/requests/${str(f, "id")}`);
 }
 
 export async function pinRequest(f: FormData) {

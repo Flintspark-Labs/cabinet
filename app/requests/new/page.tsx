@@ -25,6 +25,8 @@ export default async function NewRequest({ searchParams }: { searchParams: Promi
         <textarea id="context" name="context" maxLength={4000} />
         <label htmlFor="return_by">Return by <small>default 7 days, maximum 30</small></label>
         <input id="return_by" type="datetime-local" name="return_by" defaultValue={defaultReturn} />
+        <label htmlFor="share_max_uses">Share link seats <small>how many people may take a seat through the share link. 0 disables it. Default 10, maximum 25.</small></label>
+        <input id="share_max_uses" type="number" name="share_max_uses" min={0} max={25} defaultValue={10} style={{ width: "6rem" }} />
       </ActionForm>
     </>
   );
