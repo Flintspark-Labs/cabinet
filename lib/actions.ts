@@ -134,3 +134,30 @@ export async function joinRequest(_: unknown, f: FormData): Promise<Result> {
   try { token = await S.joinByShareToken(str(f, "share"), str(f, "name"), str(f, "email") || null); } catch (e) { return { error: (e as Error).message }; }
   redirect(`/d/${token}`);
 }
+
+// Dissolve a Cabinet: owner only (RLS), typed-name confirmation. Notifies open Dispatches, then one DELETE cascades
+// through appointments, Requests, Dispatches, Opinions, Briefs and share links in a single transaction.
+// Kept on purpose: audit_log rows (no content) and the global opt-out list.
+export async function dissolveCabinet(_: unknown, f: FormData): Promise<Result> {
+  const { supabase, user } = await requireUser();
+  const id = str(f, "id");
+  const { data: cab } = await supabase.from("cabinets").select("id, name, requests(id, rfc_number, status, dispatches(status, appointment:appointments(display_name, email)))").eq("id", id).maybeSingle();
+  if (!cab) return { error: "No such Cabinet." };
+  if (str(f, "confirm").trim() !== cab.name) return { error: "Type the Cabinet's name exactly to confirm." };
+  const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).single();
+  const { sendMail } = await import("./mail");
+  const { withdrawnEmail } = await import("@/emails/withdrawn");
+  const { rfcNumber } = await import("./classes");
+  type D = { status: string; appointment: { display_name: string; email: string | null } };
+  for (const r of cab.requests) {
+    if (r.status !== "open") continue;
+    for (const d of r.dispatches as unknown as D[]) {
+      if (!d.appointment.email || !["sent", "accepted", "drafted"].includes(d.status)) continue;
+      try { await sendMail(d.appointment.email, `Withdrawn · ${rfcNumber(r.rfc_number)}`, withdrawnEmail(d.appointment.display_name, profile?.display_name ?? "The Principal", r.rfc_number)); } catch (e) { console.error("withdrawn mail failed:", (e as Error).message); }
+    }
+  }
+  const { error, count } = await supabase.from("cabinets").delete({ count: "exact" }).eq("id", id);
+  if (error || !count) return { error: error?.message ?? "Nothing was deleted." };
+  await db().from("audit_log").insert({ actor: user.id, action: "dissolve", entity: "cabinet", entity_id: id });
+  redirect("/cabinets?dissolved=1");
+}

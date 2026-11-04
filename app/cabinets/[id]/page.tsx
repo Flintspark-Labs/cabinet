@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/ActionForm";
-import { appointSecretary, removeSecretary } from "@/lib/actions";
+import { appointSecretary, removeSecretary, dissolveCabinet } from "@/lib/actions";
 import { CLASSES, rfcNumber, type RfcClass } from "@/lib/classes";
 import { open } from "@/lib/seal";
 
@@ -37,6 +37,19 @@ export default async function Cabinet({ params }: { params: Promise<{ id: string
         <table><thead><tr><th>No.</th><th>Class</th><th>Question</th><th>Status</th><th>Return by</th></tr></thead>
           <tbody>{requests.map((r) => <tr key={r.id}><td><Link href={`/requests/${r.id}`}>{rfcNumber(r.rfc_number)}</Link></td><td>{CLASSES[r.class as RfcClass].label}</td><td>{open(r.question)}</td><td className={`status ${r.status}`}>{r.status}</td><td>{new Date(r.return_by).toLocaleDateString()}</td></tr>)}</tbody></table>
       ) : <p>No Requests yet.</p>}
+
+      <h2>Dissolve this Cabinet</h2>
+      <details>
+        <summary>Dissolve, withdraw every open Request, and delete all its data</summary>
+        <div className="card" style={{ borderColor: "var(--seal)" }}>
+          <p>This withdraws every open Request (Secretaries with an email are told), kills every share link and Dispatch link, and permanently deletes the Cabinet, its Secretaries, Requests, Opinions signed or not, and Briefs. It cannot be undone. The audit log keeps a line saying the Cabinet was dissolved, with no content.</p>
+          <ActionForm action={dissolveCabinet} submit="Dissolve the Cabinet">
+            <input type="hidden" name="id" value={cab.id} />
+            <label htmlFor="confirm">Type the Cabinet's name to confirm: <strong>{cab.name}</strong></label>
+            <input id="confirm" type="text" name="confirm" autoComplete="off" required />
+          </ActionForm>
+        </div>
+      </details>
     </>
   );
 }

@@ -3,13 +3,15 @@ import { requireUser } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/ActionForm";
 import { convene } from "@/lib/actions";
 
-export default async function Cabinets() {
+export default async function Cabinets({ searchParams }: { searchParams: Promise<{ dissolved?: string }> }) {
+  const { dissolved } = await searchParams;
   const { supabase } = await requireUser();
   const { data: cabinets } = await supabase.from("cabinets").select("id, name, purpose, created_at, appointments(count)").order("created_at", { ascending: false });
   return (
     <>
       <p className="docno">Principal</p>
       <h1>Your Cabinets</h1>
+      {dissolved && <p className="notice">The Cabinet is dissolved and its data deleted.</p>}
       {cabinets?.length ? (
         <table><thead><tr><th>Cabinet</th><th>Secretaries</th><th>Convened</th></tr></thead>
           <tbody>{cabinets.map((c) => <tr key={c.id}><td><Link href={`/cabinets/${c.id}`}>{c.name}</Link>{c.purpose && <div className="small" style={{ color: "var(--muted)" }}>{c.purpose}</div>}</td><td>{(c.appointments as unknown as { count: number }[])[0]?.count ?? 0}</td><td>{new Date(c.created_at).toLocaleDateString()}</td></tr>)}</tbody></table>

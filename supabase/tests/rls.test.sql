@@ -1,6 +1,6 @@
 -- Row-level security: one Principal cannot read another's rows (Article IX). Run: supabase test db --linked
 begin;
-select plan(11);
+select plan(14);
 
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000a', 'a@example.com'), ('00000000-0000-0000-0000-00000000000b', 'b@example.com');
 insert into cabinets (id, principal_id, name) values ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', 'A cabinet');
@@ -30,6 +30,18 @@ reset role;
 update opinions set signed_at = null where dispatch_id = '40000000-0000-0000-0000-000000000001';
 set local role authenticated;
 select is((select count(*) from opinions), 0::bigint, 'opinions: unsigned Opinion is invisible to the Principal');
+
+-- Dissolve: a non-owner cannot delete the Cabinet; the owner can, and everything beneath it goes in the same statement.
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}';
+delete from cabinets where id = '10000000-0000-0000-0000-000000000001';
+reset role;
+select is((select count(*) from cabinets where id = '10000000-0000-0000-0000-000000000001'), 1::bigint, 'dissolve: non-owner delete is a no-op');
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}';
+delete from cabinets where id = '10000000-0000-0000-0000-000000000001';
+reset role;
+select is((select count(*) from cabinets where id = '10000000-0000-0000-0000-000000000001'), 0::bigint, 'dissolve: owner delete removes the Cabinet');
+select is((select count(*) from requests where id = '30000000-0000-0000-0000-000000000001') + (select count(*) from dispatches where id = '40000000-0000-0000-0000-000000000001') + (select count(*) from opinions where dispatch_id = '40000000-0000-0000-0000-000000000001') + (select count(*) from briefs where request_id = '30000000-0000-0000-0000-000000000001') + (select count(*) from appointments where id = '20000000-0000-0000-0000-000000000001'), 0::bigint, 'dissolve: Requests, Dispatches, Opinions, Briefs and appointments cascade away');
 
 select * from finish();
 rollback;
