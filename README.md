@@ -12,7 +12,7 @@ Next.js (App Router, TypeScript) on Vercel. Supabase for auth, Postgres and row-
 
 - `app/` routes. `/` is the public site; `/cabinets`, `/requests` are the Principal's; `/d/[token]` is the Secretary's.
 - `lib/` services. `principal.ts` (convene, appoint, issue), `secretary.ts` (accept, recuse, draft, sign), `brief.ts`, `packet.ts` (the Dispatch Packet and Standing Orders), `mail.ts`, `token.ts`.
-- `mcp/` the Secure Line tool definitions, served by `app/api/mcp`.
+- `mcp/` the Secure Line tool definitions, served by `app/api/mcp`. A personal access token (from `/account`) unlocks the Principal tools and `my_dispatches`, which lets a Secretary's assistant fetch their open Dispatches without searching mail.
 - `emails/` plain-text mail templates.
 - `supabase/migrations/` the Record. `supabase/tests/` pgTAP row-level security tests.
 

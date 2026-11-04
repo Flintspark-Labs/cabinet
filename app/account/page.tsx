@@ -8,7 +8,7 @@ export default async function Account() {
   const { data: pats } = await supabase.from("personal_access_tokens").select("id, name, created_at, last_used_at").order("created_at");
   return (
     <>
-      <p className="docno">Principal</p>
+      <p className="docno">Account</p>
       <h1>Account</h1>
       <p>Signed in as {user.email}. Secretaries see the name below on every Dispatch.</p>
       <form action={updateProfile}>
@@ -18,7 +18,7 @@ export default async function Account() {
       </form>
 
       <h2>Personal access tokens</h2>
-      <p>Let your own AI convene Cabinets, issue Requests and read Opinions over the Secure Line. Send a token as <code>Authorization: Bearer</code> to <code>/api/mcp</code>. Revoke any token here.</p>
+      <p>Let your own AI pick up Dispatches addressed to {user.email} (my_dispatches), and convene Cabinets, issue Requests and read Opinions, over the Secure Line. Send a token as <code>Authorization: Bearer</code> to <code>/api/mcp</code>. Revoke any token here.</p>
       {pats?.length ? (
         <table><thead><tr><th>Name</th><th>Issued</th><th>Last used</th><th></th></tr></thead>
           <tbody>{pats.map((t) => <tr key={t.id}><td>{t.name}</td><td>{new Date(t.created_at).toLocaleDateString()}</td><td>{t.last_used_at ? new Date(t.last_used_at).toLocaleString() : "never"}</td>

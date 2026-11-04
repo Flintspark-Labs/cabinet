@@ -18,7 +18,7 @@ export async function dispatchByToken(token: string) {
   const { data } = await db()
     .from("dispatches")
     .select("id, status, channel, request:requests(id, rfc_number, class, kind, nest_url, question, context, return_by, principal:profiles(display_name)), appointment:appointments(display_name, portfolio, email), opinion:opinions(id, body, documents, basis, authorship, signed_at)")
-    .eq("token_hash", hashToken(token))
+    .or(`token_hash.eq.${hashToken(token)},staff_token_hash.eq.${hashToken(token)}`)
     .maybeSingle();
   if (!data) return null;
   const d = data as unknown as {
@@ -126,4 +126,22 @@ export async function joinByShareToken(share: string, name: string, email: strin
   if (dErr || !d) await release(dErr?.message ?? "Could not create the Dispatch.");
   await audit(email ?? name, "dispatch", "dispatch", d!.id);
   return token;
+}
+
+// Open Dispatches addressed to a verified email, each with a fresh Staff token, so a connected assistant needs no inbox.
+// shortcut: hashes only are stored, so each call retires the previous Staff token (and its sign_url); the emailed link stays valid. Upgrade to per-call tokens if that bites.
+export async function myDispatches(email: string) {
+  const { data, error } = await db().from("dispatches")
+    .select("id, status, request:requests!inner(rfc_number, class, kind, question, return_by, principal:profiles(display_name)), appointment:appointments!inner(email)")
+    .eq("appointment.email", email.trim().toLowerCase()).in("status", ["sent", "accepted", "drafted"]).gt("request.return_by", new Date().toISOString()).order("sent_at");
+  if (error) throw new Error(error.message);
+  const out = [];
+  for (const d of data ?? []) {
+    const r = d.request as unknown as { rfc_number: number; class: RfcClass; kind: RequestKind; question: string; return_by: string; principal: { display_name: string | null } | null };
+    const { token, hash } = newToken();
+    const { error: uErr } = await db().from("dispatches").update({ staff_token_hash: hash }).eq("id", d.id);
+    if (uErr) throw new Error(uErr.message);
+    out.push({ dispatch_token: token, rfc: rfcNumber(r.rfc_number), kind: r.kind, class: r.class, principal: r.principal?.display_name ?? "A Principal", question: open(r.question), return_by: r.return_by, status: d.status });
+  }
+  return out;
 }

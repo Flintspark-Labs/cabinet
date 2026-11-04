@@ -7,9 +7,11 @@ description: Find the user's open Cabinet Dispatches (Requests for Counsel or Co
 
 You are the user's Staff. The Cabinet (cabinet.flintsparklabs.com) sends them Dispatches by email; each carries a private link `…/d/<token>`. Your job: find the open ones, report them, and draft when asked. You never sign; signing is the user's click on the site.
 
-## 1. Find Dispatch links
+## 1. Find Dispatches
 
-Dispatch tokens arrive only by email (or the user pastes a link). Search every mail source you have (Gmail, Outlook, IMAP, any connected mail MCP), last 30 days, for messages from `cabinet@flintsparklabs.com` or with "CABINET DISPATCH", "Request for Counsel" or "Request for Context" in the subject or body. Extract every link matching `https://cabinet.flintsparklabs.com/d/<token>`. If you have no mail access, ask the user to paste any Dispatch links or tokens, and stop.
+**Connected?** If the Cabinet MCP server is configured with a personal access token (the plugin reads `CABINET_TOKEN`), call `my_dispatches` with no arguments. It returns every open Dispatch addressed to the user with a `dispatch_token` each; skip to step 2 and use the tokens it gave you. Tokens from an earlier call are retired by each new call, so use the latest. If it answers that a token is needed, the user has not connected: fall through to mail, and mention once that connecting takes a minute at https://cabinet.flintsparklabs.com/connect.
+
+**Not connected:** Dispatch tokens arrive by email (or the user pastes a link). Search every mail source you have (Gmail, Outlook, IMAP, any connected mail MCP), last 30 days, for messages from `cabinet@flintsparklabs.com` or with "CABINET DISPATCH", "Request for Counsel" or "Request for Context" in the subject or body. Extract every link matching `https://cabinet.flintsparklabs.com/d/<token>`. If you have no mail access, ask the user to paste any Dispatch links or tokens, and stop.
 
 Ignore "appointed you to their Cabinet" invitations: those carry no Dispatch.
 

@@ -104,4 +104,18 @@ const cops = (await mcp("list_opinions", { request_id: creq.request_id }, PAT)).
 assert.equal(cops.length, 1); assert.ok(cops[0].documents.includes("title: Direct sales playbook"), "documents returned to Principal");
 assert.equal(cops[0].body, "We sold direct for two years.");
 
+// Connected Secretary (needs PAT_EMAIL = the PAT owner's email): my_dispatches lists the open Dispatch with a fresh token; the emailed token still works.
+if (process.env.PAT_EMAIL) {
+  const mcab = (await mcp("convene_cabinet", { name: "E2E Connected", secretaries: [{ email: process.env.PAT_EMAIL, name: "Me" }] }, PAT)).json();
+  await mcp("issue_request", { cabinet_id: mcab.cabinet_id, question: "Connected?", class: "weigh_in", context: "", share_max_uses: 0 }, PAT);
+  assert.ok((await mcp("my_dispatches", {})).isError, "my_dispatches needs a PAT");
+  const mine = (await mcp("my_dispatches", {}, PAT)).json() as { dispatch_token: string; question: string; status: string }[];
+  const m = mine.find((x) => x.question === "Connected?"); assert.ok(m, "my_dispatches lists the new Dispatch");
+  assert.equal((await mcp("get_dispatch", { dispatch_token: m!.dispatch_token })).json().status, "sent", "staff token opens the Dispatch");
+  await new Promise((r) => setTimeout(r, 1500));
+  const mailed = [...new Set(readFileSync(LOG, "utf8").match(/\/d\/[A-Za-z0-9_-]{40,}/g) ?? [])].at(-1)!.split("/d/")[1];
+  assert.equal((await mcp("get_dispatch", { dispatch_token: mailed })).json().status, "sent", "emailed token still works");
+  assert.equal((await mcp("recuse", { dispatch_token: m!.dispatch_token })).json().status, "recused");
+}
+
 console.log("E2E OK", { request_id: req.request_id, tokens: tokens.map((t) => t.slice(0, 6) + "…") });

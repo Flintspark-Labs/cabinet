@@ -50,10 +50,11 @@ Every Dispatch carries them; no channel may omit or alter them. Need-to-know; RF
 ## Article V. Channels
 Paper Process (Phase 1): Dispatch page shows the full packet with a Copy button, instructions for Claude, ChatGPT, Gemini and any assistant; Opinion form takes plain text up to 6,000 chars plus both labels; submitting creates a draft and opens signing.
 
-Secure Line (Phase 2): remote MCP server at /api/mcp (Streamable HTTP). Secretary tools scoped by dispatch token, no account. Principal tools behind OAuth 2.1 via Supabase Auth, or personal access tokens issued at /account if Supabase cannot act as OAuth server. submit_opinion only creates a draft and returns the signing URL. /connect explains setup.
+Secure Line (Phase 2): remote MCP server at /api/mcp (Streamable HTTP). Secretary tools scoped by dispatch token, no account. A Secretary may connect once: sign in, issue a personal access token, and my_dispatches lists their open Dispatches with tokens (stored hashed in dispatches.staff_token_hash, replaced each call; the emailed token stays valid). Principal tools behind OAuth 2.1 via Supabase Auth, or personal access tokens issued at /account if Supabase cannot act as OAuth server. submit_opinion only creates a draft and returns the signing URL. /connect explains setup.
 
 | Tool | Caller | Input | Returns |
 |---|---|---|---|
+| my_dispatches | Secretary (PAT) | none | open Dispatches addressed to the token owner's email, each with a fresh dispatch_token |
 | get_dispatch | Secretary | dispatch_token | packet, class, return-by, status |
 | submit_opinion | Secretary | dispatch_token, body, basis, authorship | opinion_id, sign_url, status drafted |
 | recuse | Secretary | dispatch_token | status recused |

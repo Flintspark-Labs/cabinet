@@ -11,7 +11,7 @@ What that means: now and then ${p.principal} will put a question to a few people
 Nothing to do now.
 
 Optional one-time setup, so answering later takes a minute:
-1. Connect your AI to The Cabinet (MCP). Then it can fetch a request and file your draft itself; you still sign on the site. Steps: ${appUrl()}/connect
+1. Connect your AI to The Cabinet (MCP) with a personal access token from ${appUrl()}/account (sign in with this email). Then it finds and fetches your requests itself, from any colleague who appoints you, and files your draft; you still sign on the site. Steps: ${appUrl()}/connect
 2. Claude Code users: install the plugin and run /check-for-cabinet-requests whenever you like, or on a daily routine. Steps on the same page.
 
 —

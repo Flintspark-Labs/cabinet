@@ -1,5 +1,9 @@
 {
   "mcpServers": {
-    "cabinet": { "type": "http", "url": "https://cabinet.flintsparklabs.com/api/mcp" }
+    "cabinet": {
+      "type": "http",
+      "url": "https://cabinet.flintsparklabs.com/api/mcp",
+      "headers": { "Authorization": "Bearer ${CABINET_TOKEN:-none}" }
+    }
   }
 }

@@ -6,9 +6,9 @@ export default function Login() {
   const [state, action, pending] = useActionState(sendMagicLink, {});
   return (
     <>
-      <p className="docno">Principal sign-in</p>
+      <p className="docno">Sign-in</p>
       <h1>Sign in by magic link</h1>
-      <p>Enter your email. We send a link that signs you in. No password. Secretaries never need an account; they answer from the link in their Dispatch.</p>
+      <p>Enter your email. We send a link that signs you in. No password. Secretaries need no account to answer from the link in their Dispatch; sign in only to connect your assistant so it picks up Dispatches itself.</p>
       {state.sent ? <p className="notice">Check your email for the sign-in link.</p> : (
         <form action={action}>
           <label htmlFor="email">Email</label>

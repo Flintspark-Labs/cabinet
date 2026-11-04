@@ -47,7 +47,17 @@ export function registerTools(server: McpServer) {
   });
 
   const principal = (ctx: Ctx) => ctx.http?.authInfo?.clientId ?? null;
-  const needAuth = () => fail(`Principal tools need a personal access token from ${appUrl()}/account sent as Authorization: Bearer.`);
+  const needAuth = () => fail(`This tool needs a personal access token from ${appUrl()}/account sent as Authorization: Bearer.`);
+
+  server.registerTool("my_dispatches", {
+    title: "My open Dispatches", description: "Open Dispatches addressed to the signed-in person, each with a dispatch_token for get_dispatch, submit_opinion and recuse. For Secretaries who connected their assistant once with a personal access token: no inbox search needed. Each call issues fresh tokens and retires the previous call's (the emailed link stays valid), so always give the user the newest sign_url.",
+    inputSchema: z.object({}),
+  }, async (_a, ctx) => {
+    const pid = principal(ctx as Ctx); if (!pid) return needAuth();
+    const { data: u } = await db().auth.admin.getUserById(pid);
+    if (!u.user?.email) return fail("No email on this account.");
+    try { return json(await S.myDispatches(u.user.email)); } catch (e) { return fail((e as Error).message, e); }
+  });
 
   server.registerTool("list_cabinets", {
     title: "List Cabinets", description: "The Principal's Cabinets with purpose and Secretary count. Check this before convening a new one.",
