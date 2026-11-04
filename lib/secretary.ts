@@ -7,6 +7,7 @@ import { maybeCompileBrief } from "./brief";
 import { sendMail } from "./mail";
 import { opinionSignedEmail } from "@/emails/opinion-signed";
 import { appUrl, rfcNumber, type RfcClass } from "./classes";
+import { parsePasted } from "./pasted";
 
 // All Secretary access goes through here with the service role, verified by token (Article VI.3).
 export async function dispatchByToken(token: string) {
@@ -57,12 +58,12 @@ export async function recuse(token: string) {
 }
 
 // Creates or replaces the unsigned draft. Never signs (Article V, Secure Line 4).
-export async function submitDraft(token: string, body: string, basis: "record" | "general", authorship: "own_hand" | "staff_drafted", channel: "paper" | "secure_line") {
+export async function submitDraft(token: string, body: string, basis: "record" | "general" | "", authorship: "own_hand" | "staff_drafted", channel: "paper" | "secure_line") {
   const d = await dispatchByToken(token);
   if (!d || !isOpen(d)) throw new Error("This Dispatch is closed.");
-  body = body.trim();
+  ({ body, basis } = parsePasted(body, basis));
   if (!body || body.length > 6000) throw new Error("The Opinion must be between 1 and 6,000 characters.");
-  if (!["record", "general"].includes(basis) || !["own_hand", "staff_drafted"].includes(authorship)) throw new Error("Both labels are required.");
+  if (!["record", "general"].includes(basis) || !["own_hand", "staff_drafted"].includes(authorship)) throw new Error("Choose a Basis (or paste the block starting with its Basis line) and a Signature.");
   const { data: op, error } = await db().from("opinions").upsert({ dispatch_id: d.id, body, basis, authorship, signed_at: null }, { onConflict: "dispatch_id" }).select("id").single();
   if (error) throw new Error(error.message);
   await db().from("dispatches").update({ status: "drafted", channel }).eq("id", d.id);

@@ -38,6 +38,6 @@ Opinion:
 Sources consulted (describe them, never quote them):
 <for example: "our 2023 database migration notes">
 
-SECURE LINE ONLY
-When your user approves the draft, call submit_opinion with the dispatch token above. Then give your user the signing link it returns.`;
+RETURN
+Give your user the finished Opinion as one plain-text block in the FORMAT above, ready to copy. They paste it at ${appUrl()}/d/${p.dispatch_token}/paper and sign there. Do not call tools, send anything or fetch links. Only if your user has The Cabinet connected as an MCP server and asks you to file it, call submit_opinion with the dispatch token above and give them the signing link it returns.`;
 }

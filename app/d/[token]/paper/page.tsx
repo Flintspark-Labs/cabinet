@@ -21,7 +21,7 @@ export default async function Paper({ params }: { params: Promise<{ token: strin
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>How to use it</h3>
-          <p><strong>Claude.</strong> Open a chat where Claude can reach your files, mail or notes (Claude Desktop, claude.ai with connectors, or Claude Code). Paste the packet. Review the draft. Paste it below.</p>
+          <p><strong>Claude.</strong> Open a chat where Claude can reach your files, mail or notes (Claude Desktop, claude.ai with connectors, or Claude Code). Paste the packet. It hands back one block. Copy it, paste it below.</p>
           <p><strong>ChatGPT.</strong> Open a chat with memory and any connected apps on. Paste the packet. Review the draft. Paste it below.</p>
           <p><strong>Gemini.</strong> Open Gemini with Workspace extensions on. Paste the packet. Review the draft. Paste it below.</p>
           <p><strong>Any other assistant.</strong> Paste the packet, ask it to follow the Standing Orders, review, paste below.</p>
@@ -30,13 +30,13 @@ export default async function Paper({ params }: { params: Promise<{ token: strin
       </div>
 
       <h2>File the Opinion</h2>
-      <p>Submitting creates an unsigned draft and opens the signing page. Nothing reaches the Principal until you sign there.</p>
+      <p>Paste your assistant's whole reply, or write your own. If the paste starts with its Basis line we read it. Submitting creates an unsigned draft and opens the signing page. Nothing reaches the Principal until you sign there.</p>
       <ActionForm action={submitPaperOpinion} submit="Continue to signing">
         <input type="hidden" name="token" value={token} />
-        <label htmlFor="body">Opinion <small>plain text, up to 6,000 characters</small></label>
+        <label htmlFor="body">Opinion <small>plain text, up to 6,000 characters. Paste the full block; the Basis line and “Opinion:” label are handled.</small></label>
         <textarea id="body" name="body" required maxLength={6000} style={{ minHeight: "14rem" }} defaultValue={d.opinion?.body ?? ""} />
         <fieldset><legend>Basis</legend>
-          <label><input type="radio" name="basis" value="record" required defaultChecked={d.opinion?.basis === "record"} /> From the Record (your own history)</label>
+          <label><input type="radio" name="basis" value="record" defaultChecked={d.opinion?.basis === "record"} /> From the Record (your own history)</label>
           <label><input type="radio" name="basis" value="general" defaultChecked={d.opinion?.basis === "general"} /> General Counsel (general knowledge)</label>
         </fieldset>
         <fieldset><legend>Signature</legend>

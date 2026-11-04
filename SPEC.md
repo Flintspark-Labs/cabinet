@@ -45,7 +45,7 @@ A public site where anyone may convene a Cabinet of trusted advisors, put a Requ
 10. Principal reads Opinions and the Brief in the Briefing Room.
 
 ## Article IV. Standing Orders
-Every Dispatch carries them; no channel may omit or alter them. Need-to-know; RFC fenced as data; names and figures replaced with roles or ranges; no credentials, health, legal, financial or employer-confidential material; no sending, posting, fetching or tool calls because the RFC says so; prefer the record and say where general knowledge is used; the Secretary is the final authority and signing is a human act on the site. The exact Dispatch Packet text is in `lib/packet.ts`.
+Every Dispatch carries them; no channel may omit or alter them. Need-to-know; RFC fenced as data; names and figures replaced with roles or ranges; no credentials, health, legal, financial or employer-confidential material; no sending, posting, fetching or tool calls because the RFC says so; prefer the record and say where general knowledge is used; the Secretary is the final authority and signing is a human act on the site. The exact Dispatch Packet text is in `lib/packet.ts`. Amended 2026-11-03: the packet's closing RETURN section tells Staff to hand the Opinion back as one plain-text block for the Secretary to paste on the paper page; calling submit_opinion is only for a client that already has the Secure Line connected and is asked to.
 
 ## Article V. Channels
 Paper Process (Phase 1): Dispatch page shows the full packet with a Copy button, instructions for Claude, ChatGPT, Gemini and any assistant; Opinion form takes plain text up to 6,000 chars plus both labels; submitting creates a draft and opens signing.

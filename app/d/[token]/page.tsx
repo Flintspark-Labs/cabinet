@@ -27,12 +27,12 @@ export default async function DispatchPage({ params, searchParams }: { params: P
 
       {isOpen(d) && (<>
         <h2>Accept or recuse</h2>
-        <p>Accepting opens the Dispatch Packet. Your own AI reads your record on your side; nothing reaches the Cabinet Office until you sign. You may recuse without giving a reason.</p>
+        <p>Accepting opens the Dispatch Packet. Copy it into your own AI; it reads your record on your side and hands back a draft you paste here and sign. Nothing reaches the Cabinet Office until you sign. You may recuse without giving a reason.</p>
         <div className="grid">
           <form action={acceptDispatch} className="card"><input type="hidden" name="token" value={token} /><input type="hidden" name="channel" value="paper" />
-            <h3 style={{ marginTop: 0 }}>The Paper Process</h3><p>Copy the packet, paste it into Claude, ChatGPT, Gemini or any assistant, paste the draft back here.</p><button>Accept · Paper Process</button></form>
+            <h3 style={{ marginTop: 0 }}>The Paper Process</h3><p>Copy the packet, paste it into Claude, ChatGPT, Gemini or any assistant, paste its reply back here. Works with anything. Recommended.</p><button>Accept · Paper Process</button></form>
           <form action={acceptDispatch} className="card"><input type="hidden" name="token" value={token} /><input type="hidden" name="channel" value="secure_line" />
-            <h3 style={{ marginTop: 0 }}>The Secure Line</h3><p>Your AI client connects to The Cabinet over MCP, fetches the Dispatch and files the draft. You still sign here.</p><button>Accept · Secure Line</button></form>
+            <h3 style={{ marginTop: 0 }}>The Secure Line</h3><p>Only if your AI client already has The Cabinet connected over MCP: it fetches the Dispatch and files the draft itself. You still sign here.</p><button className="secondary">Accept · Secure Line</button></form>
         </div>
         <form action={recuseDispatch}><input type="hidden" name="token" value={token} /><button className="secondary">Recuse</button></form>
         {d.status !== "sent" && <p><Link href={`/d/${token}/paper`}>Open the Dispatch Packet</Link> · <Link href={`/d/${token}/sign`}>Go to signing</Link></p>}
