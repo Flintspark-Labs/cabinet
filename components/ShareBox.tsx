@@ -10,7 +10,7 @@ Return by ${returnBy}.
 
 Take a seat here: ${link}
 
-Give your name, read the question, then either write your answer or paste the Dispatch Packet into your own AI (Claude, ChatGPT, Gemini, anything) so it drafts from your own notes and history. You review and sign before anything is sent. Nothing from your side is stored except the answer you sign. No account needed.`;
+Give your name, read the question, then either write your answer or paste the Dispatch Packet into your own AI (Claude, ChatGPT, Gemini, anything) so it drafts from your own notes and history. You review and sign before anything is sent. Nothing from your side is stored except the answer you sign; it is encrypted and deleted 30 days after the question closes. No account needed.`;
   return (
     <div className="card">
       <p className="docno">Share link</p>

@@ -20,7 +20,7 @@ Next.js (App Router, TypeScript) on Vercel. Supabase for auth, Postgres and row-
 
 1. Create a Supabase project. `supabase link --project-ref <ref>` then `supabase db push`.
 2. In Supabase Auth, set the Site URL to your domain and add `https://<domain>/**` to the redirect allow-list. The default Supabase mailer sends two auth emails an hour; configure custom SMTP for real use.
-3. Copy `.env.example` to `.env.local` and fill it in. `CRON_SECRET` is any random string.
+3. Copy `.env.example` to `.env.local` and fill it in. `CRON_SECRET` is any random string. `APP_SECRET` is 32 random bytes as hex (`openssl rand -hex 32`); it encrypts questions, Opinions and Briefs, so back it up and never rotate it without re-encrypting.
 4. `npm install && npm run dev`.
 5. Deploy to Vercel. Set the same variables in the project. `vercel.json` schedules the hourly Clock at `/api/cron`; Vercel sends `CRON_SECRET` automatically.
 6. Verify a sending domain in Resend and set `MAIL_FROM`.

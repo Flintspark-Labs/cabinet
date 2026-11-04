@@ -3,6 +3,7 @@ import { dispatchByToken, isOpen } from "@/lib/secretary";
 import { acceptDispatch, recuseDispatch } from "@/lib/actions";
 import { CLASSES, rfcNumber, STATUS_LABEL } from "@/lib/classes";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { Stamp } from "@/components/Stamp";
 
 export default async function DispatchPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ signed?: string }> }) {
   const { token } = await params;
@@ -15,10 +16,12 @@ export default async function DispatchPage({ params, searchParams }: { params: P
       <p className="docno">Cabinet Dispatch · {rfcNumber(d.request.rfc_number)}</p>
       <h1>Request for Counsel</h1>
       <p>Dear {d.appointment.display_name}{d.appointment.portfolio ? `, ${d.appointment.portfolio}` : ""}: <strong>{principal}</strong> asks for your counsel.</p>
-      <div className="card">
+      <div className={`card${d.status === "signed" || d.status === "recused" ? " stamped" : ""}${signed ? " shake" : ""}`}>
         <p className="docno">{CLASSES[d.request.class].label} · return by {new Date(d.request.return_by).toUTCString()}</p>
         <p className="lede">{d.request.question}</p>
         {d.request.context && <p><em>Context from the Principal:</em> {d.request.context}</p>}
+        {d.status === "signed" && <Stamp text="Signed" sub={`${rfcNumber(d.request.rfc_number)} · filed ${new Date(d.opinion?.signed_at ?? Date.now()).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`} slam={!!signed} />}
+        {d.status === "recused" && <Stamp text="Recused" sub={rfcNumber(d.request.rfc_number)} slam />}
       </div>
       {signed && <p className="notice">Your Opinion is signed and filed. {principal} has been notified. Thank you.</p>}
       <p className="status">Status: {STATUS_LABEL[d.status]}</p>

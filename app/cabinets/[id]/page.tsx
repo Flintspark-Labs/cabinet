@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/ActionForm";
 import { appointSecretary, removeSecretary } from "@/lib/actions";
 import { CLASSES, rfcNumber, type RfcClass } from "@/lib/classes";
+import { open } from "@/lib/seal";
 
 export default async function Cabinet({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,7 +34,7 @@ export default async function Cabinet({ params }: { params: Promise<{ id: string
       <h2>Requests for Counsel</h2>
       {requests.length ? (
         <table><thead><tr><th>No.</th><th>Class</th><th>Question</th><th>Status</th><th>Return by</th></tr></thead>
-          <tbody>{requests.map((r) => <tr key={r.id}><td><Link href={`/requests/${r.id}`}>{rfcNumber(r.rfc_number)}</Link></td><td>{CLASSES[r.class as RfcClass].label}</td><td>{r.question}</td><td className={`status ${r.status}`}>{r.status}</td><td>{new Date(r.return_by).toLocaleDateString()}</td></tr>)}</tbody></table>
+          <tbody>{requests.map((r) => <tr key={r.id}><td><Link href={`/requests/${r.id}`}>{rfcNumber(r.rfc_number)}</Link></td><td>{CLASSES[r.class as RfcClass].label}</td><td>{open(r.question)}</td><td className={`status ${r.status}`}>{r.status}</td><td>{new Date(r.return_by).toLocaleDateString()}</td></tr>)}</tbody></table>
       ) : <p>No Requests yet.</p>}
     </>
   );

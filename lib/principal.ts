@@ -6,6 +6,7 @@ import { sendMail } from "./mail";
 import { dispatchEmail } from "@/emails/dispatch";
 import { appUrl, rfcNumber, CLASSES, type RfcClass } from "./classes";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { seal } from "./seal";
 
 export type Secretary = { email: string; name: string; portfolio?: string | null };
 
@@ -57,7 +58,7 @@ export async function issueRequest(supabase: SupabaseClient, userId: string, inp
   const skip = new Set((optedOut ?? []).map((o) => o.email.toLowerCase()));
 
   const { data: req, error } = await supabase.from("requests").insert({
-    principal_id: userId, cabinet_id: input.cabinet_id, question, class: input.class as RfcClass, context: input.context.trim(), return_by: returnBy.toISOString(),
+    principal_id: userId, cabinet_id: input.cabinet_id, question: seal(question), class: input.class as RfcClass, context: seal(input.context.trim()), return_by: returnBy.toISOString(),
   }).select("id, rfc_number, share_token").single();
   if (error) throw new Error(error.message);
   await audit(userId, "issue", "request", req.id);

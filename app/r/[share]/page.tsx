@@ -2,6 +2,7 @@ import { db } from "@/lib/supabase/admin";
 import { ActionForm } from "@/components/ActionForm";
 import { joinRequest } from "@/lib/actions";
 import { CLASSES, rfcNumber, type RfcClass } from "@/lib/classes";
+import { open } from "@/lib/seal";
 
 export default async function Join({ params }: { params: Promise<{ share: string }> }) {
   const { share } = await params;
@@ -15,11 +16,11 @@ export default async function Join({ params }: { params: Promise<{ share: string
       <h1>{principal} asks for your counsel</h1>
       <div className="card">
         <p className="docno">{CLASSES[r.class as RfcClass].label} · return by {new Date(r.return_by).toUTCString()}</p>
-        <p className="lede">{r.question}</p>
-        {r.context && <p><em>Context from the Principal:</em> {r.context}</p>}
+        <p className="lede">{open(r.question)}</p>
+        {open(r.context) && <p><em>Context from the Principal:</em> {open(r.context)}</p>}
       </div>
       {closed ? <p>This Request is closed.</p> : (<>
-        <p>Give your name to take a seat as a Secretary on this Request. No account. Your own AI drafts from your own record; nothing reaches {principal} until you sign it. Email is optional: with it we can send a reminder and your private link.</p>
+        <p>Give your name to take a seat as a Secretary on this Request. No account. Your own AI drafts from your own record; nothing reaches {principal} until you sign it. What you sign is encrypted and deleted 30 days after the question closes. Email is optional: with it we can send a reminder and your private link.</p>
         <ActionForm action={joinRequest} submit="Take a seat">
           <input type="hidden" name="share" value={share} />
           <label htmlFor="name">Your name</label><input id="name" type="text" name="name" required maxLength={120} />

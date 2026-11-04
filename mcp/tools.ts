@@ -4,6 +4,7 @@ import * as S from "@/lib/secretary";
 import * as P from "@/lib/principal";
 import { db } from "@/lib/supabase/admin";
 import { CLASSES, BASIS_LABEL, AUTHORSHIP_LABEL, rfcNumber, appUrl } from "@/lib/classes";
+import { open } from "@/lib/seal";
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
 const json = (o: unknown) => text(JSON.stringify(o, null, 2));
@@ -76,7 +77,7 @@ export function registerTools(server: McpServer) {
     const { data } = await db().from("opinions").select("body, basis, authorship, signed_at, rating, dispatch:dispatches!inner(request_id, appointment:appointments(display_name, portfolio))").eq("dispatch.request_id", request_id).not("signed_at", "is", null);
     return json({ rfc: rfcNumber(req.rfc_number), opinions: (data ?? []).map((o) => {
       const a = (o.dispatch as unknown as { appointment: { display_name: string; portfolio: string | null } }).appointment;
-      return { secretary: a.display_name, portfolio: a.portfolio, basis: BASIS_LABEL[o.basis as keyof typeof BASIS_LABEL], signature: AUTHORSHIP_LABEL[o.authorship as keyof typeof AUTHORSHIP_LABEL], signed_at: o.signed_at, rating: o.rating, body: o.body };
+      return { secretary: a.display_name, portfolio: a.portfolio, basis: BASIS_LABEL[o.basis as keyof typeof BASIS_LABEL], signature: AUTHORSHIP_LABEL[o.authorship as keyof typeof AUTHORSHIP_LABEL], signed_at: o.signed_at, rating: o.rating, body: open(o.body) };
     }) });
   });
 
@@ -87,6 +88,6 @@ export function registerTools(server: McpServer) {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
     const req = await ownRequest(pid, request_id); if (!req) return fail("No such Request.");
     const { data: b } = await db().from("briefs").select("body, model, created_at").eq("request_id", request_id).maybeSingle();
-    return b ? text(b.body) : json({ status: req.status, brief: "not ready", note: "The Brief compiles when every Dispatch resolves or the return-by date passes." });
+    return b ? text(open(b.body)) : json({ status: req.status, brief: "not ready", note: "The Brief compiles when every Dispatch resolves or the return-by date passes." });
   });
 }

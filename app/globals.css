@@ -88,3 +88,19 @@ pre.packet { background: #fff; border: 1px solid var(--rule); padding: 1rem; fon
 .exhibit-row { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 .flowline { font-family: var(--serif); font-style: italic; color: var(--muted); text-align: center; margin: 0.2rem 0; }
 @media (max-width: 600px) { .msg { grid-template-columns: 1fr; gap: 0.1rem; } .titlebar .conn { display: none; } }
+
+/* Rubber stamp */
+.stamp { --stamp: #a3261f; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem; padding: 0.5rem 1rem; border: 4px double var(--stamp); border-radius: 6px; color: var(--stamp); font-family: var(--serif); font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; transform: rotate(-9deg); opacity: 0.9; mix-blend-mode: multiply; pointer-events: none; position: relative;
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.2 1.6'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); -webkit-mask-size: 200px 200px;
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.2 1.6'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); mask-size: 200px 200px; }
+.stamp-text { font-size: 1.6rem; line-height: 1; }
+.stamp-sub { font-size: 0.7rem; letter-spacing: 0.14em; font-weight: 600; }
+.stamp.small { transform: rotate(-7deg); padding: 0.25rem 0.6rem; border-width: 3px; }
+.stamp.small .stamp-text { font-size: 0.9rem; }
+.stamp.slam { animation: slam 0.55s cubic-bezier(.2,1.6,.4,1) both; animation-delay: 0.25s; }
+@keyframes slam { 0% { transform: rotate(-20deg) scale(3); opacity: 0; } 55% { transform: rotate(-9deg) scale(0.92); opacity: 0.95; } 75% { transform: rotate(-9deg) scale(1.04); } 100% { transform: rotate(-9deg) scale(1); opacity: 0.9; } }
+.stamped { position: relative; }
+.stamped > .stamp { position: absolute; right: 1rem; bottom: 0.8rem; }
+.stamped.shake { animation: shake 0.3s linear 0.5s 1; }
+@keyframes shake { 0%,100% { transform: translate(0,0); } 25% { transform: translate(2px,-1px); } 50% { transform: translate(-2px,1px); } 75% { transform: translate(1px,2px); } }
+@media (prefers-reduced-motion: reduce) { .stamp.slam, .stamped.shake { animation: none; } }

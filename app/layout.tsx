@@ -36,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="bar">
             <span>The Cabinet is not a government service.</span>
             <span>An open-source build of Flintspark Labs · Specification FSL-CAB-001</span>
+            <Link href="/privacy">Privacy</Link>
             <Link href="/opt-out">Opt out of Dispatches</Link>
             <a href="https://github.com/Flintspark-Labs/cabinet">Source</a>
           </div>

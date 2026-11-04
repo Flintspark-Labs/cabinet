@@ -8,6 +8,7 @@ import { sendMail } from "./mail";
 import { opinionSignedEmail } from "@/emails/opinion-signed";
 import { appUrl, rfcNumber, type RfcClass } from "./classes";
 import { parsePasted } from "./pasted";
+import { seal, open } from "./seal";
 
 // All Secretary access goes through here with the service role, verified by token (Article VI.3).
 export async function dispatchByToken(token: string) {
@@ -24,6 +25,8 @@ export async function dispatchByToken(token: string) {
     appointment: { display_name: string; portfolio: string | null; email: string };
     opinion: { id: string; body: string; basis: string; authorship: string; signed_at: string | null } | null;
   };
+  d.request.question = open(d.request.question); d.request.context = open(d.request.context);
+  if (d.opinion) d.opinion.body = open(d.opinion.body);
   // Tokens expire at return_by (Article VI.4).
   if (new Date(d.request.return_by) < new Date() && d.status !== "signed" && d.status !== "recused") {
     if (d.status !== "expired") await db().from("dispatches").update({ status: "expired", resolved_at: new Date().toISOString() }).eq("id", d.id);
@@ -64,7 +67,7 @@ export async function submitDraft(token: string, body: string, basis: "record" |
   ({ body, basis } = parsePasted(body, basis));
   if (!body || body.length > 6000) throw new Error("The Opinion must be between 1 and 6,000 characters.");
   if (!["record", "general"].includes(basis) || !["own_hand", "staff_drafted"].includes(authorship)) throw new Error("Choose a Basis (or paste the block starting with its Basis line) and a Signature.");
-  const { data: op, error } = await db().from("opinions").upsert({ dispatch_id: d.id, body, basis, authorship, signed_at: null }, { onConflict: "dispatch_id" }).select("id").single();
+  const { data: op, error } = await db().from("opinions").upsert({ dispatch_id: d.id, body: seal(body), basis, authorship, signed_at: null }, { onConflict: "dispatch_id" }).select("id").single();
   if (error) throw new Error(error.message);
   await db().from("dispatches").update({ status: "drafted", channel }).eq("id", d.id);
   return { opinion_id: op.id, sign_url: `${appUrl()}/d/${token}/sign` };

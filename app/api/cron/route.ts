@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
     out.briefed++;
   }
 
-  // Retention: delete 180 days after close unless pinned (Article IX.2). Dispatches and Opinions cascade.
-  const { data: old } = await db().from("requests").select("id").eq("status", "closed").eq("pinned", false).lt("return_by", new Date(now.getTime() - 180 * 86400e3).toISOString());
+  // Retention: delete 30 days after close unless pinned (Article IX.2, amended 2026-11-03). Dispatches and Opinions cascade.
+  const { data: old } = await db().from("requests").select("id").eq("status", "closed").eq("pinned", false).lt("return_by", new Date(now.getTime() - 30 * 86400e3).toISOString());
   for (const r of old ?? []) {
     await db().from("requests").delete().eq("id", r.id);
     await db().from("audit_log").insert({ actor: "clock", action: "delete", entity: "request", entity_id: r.id });

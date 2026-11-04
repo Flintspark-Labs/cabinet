@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/supabase/server";
 import { rateOpinion, pinRequest } from "@/lib/actions";
 import { ShareBox } from "@/components/ShareBox";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { open } from "@/lib/seal";
+import { Stamp } from "@/components/Stamp";
 import { appUrl, CLASSES, rfcNumber, STATUS_LABEL, BASIS_LABEL, AUTHORSHIP_LABEL, type RfcClass } from "@/lib/classes";
 
 export default async function BriefingRoom({ params }: { params: Promise<{ id: string }> }) {
@@ -13,11 +15,14 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
     .select("id, rfc_number, class, question, context, return_by, status, pinned, share_token, cabinet:cabinets(id, name), principal:profiles(display_name), dispatches(id, status, sent_at, resolved_at, appointment:appointments(display_name, portfolio), opinion:opinions(id, body, basis, authorship, signed_at, rating)), brief:briefs(body, model, created_at)")
     .eq("id", id).maybeSingle();
   if (!r) notFound();
+  r.question = open(r.question); r.context = open(r.context);
   type D = { id: string; status: string; sent_at: string; resolved_at: string | null; appointment: { display_name: string; portfolio: string | null }; opinion: { id: string; body: string; basis: keyof typeof BASIS_LABEL; authorship: keyof typeof AUTHORSHIP_LABEL; signed_at: string; rating: number | null } | null };
   const dispatches = r.dispatches as unknown as D[];
   const cabinet = r.cabinet as unknown as { id: string; name: string };
   const brief = r.brief as unknown as { body: string; model: string; created_at: string } | null;
   const signed = dispatches.filter((d) => d.opinion?.signed_at);
+  for (const d of signed) d.opinion!.body = open(d.opinion!.body);
+  if (brief) brief.body = open(brief.body);
   return (
     <>
       <p className="docno"><Link href="/cabinets">Cabinets</Link> / <Link href={`/cabinets/${cabinet.id}`}>{cabinet.name}</Link> / Briefing Room</p>
@@ -26,7 +31,7 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
       {r.context && <p><em>Context shared:</em> {r.context}</p>}
       <p className="status">{r.status} · return by {new Date(r.return_by).toUTCString()}</p>
       <form action={pinRequest} style={{ margin: 0 }}><input type="hidden" name="id" value={r.id} /><input type="hidden" name="pinned" value={String(!r.pinned)} />
-        <button className="secondary" style={{ fontSize: "0.85rem", padding: "0.2rem 0.6rem" }}>{r.pinned ? "Unpin (delete 180 days after close)" : "Pin (keep past 180 days)"}</button></form>
+        <button className="secondary" style={{ fontSize: "0.85rem", padding: "0.2rem 0.6rem" }}>{r.pinned ? "Unpin (delete 30 days after close)" : "Pin (keep past 30 days)"}</button></form>
 
       {r.status === "open" && <AutoRefresh seconds={10} />}
       <h2>Share this Request</h2>
@@ -42,10 +47,11 @@ export default async function BriefingRoom({ params }: { params: Promise<{ id: s
       {signed.map((d) => {
         const o = d.opinion!;
         return (
-          <article className="card" key={d.id}>
+          <article className="card stamped" key={d.id}>
             <h3 style={{ marginTop: 0 }}>{d.appointment.display_name}{d.appointment.portfolio ? `, ${d.appointment.portfolio}` : ""}</h3>
             <div className="labels"><span className="label">{BASIS_LABEL[o.basis]}</span><span className="label seal">{AUTHORSHIP_LABEL[o.authorship]}</span><span className="label">Signed {new Date(o.signed_at).toLocaleString()}</span></div>
-            <div className="opinion">{o.body}</div>
+            <div className="opinion" style={{ paddingBottom: "2.6rem" }}>{o.body}</div>
+            <Stamp text="Signed" sub={new Date(o.signed_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} small />
             <form action={rateOpinion} className="rating" style={{ marginTop: "0.8rem" }}>
               <input type="hidden" name="id" value={o.id} /><input type="hidden" name="request_id" value={r.id} />
               <span className="docno" style={{ marginRight: "0.5rem" }}>Usefulness</span>
