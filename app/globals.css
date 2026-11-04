@@ -26,6 +26,9 @@ footer .bar { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem; display
 .hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--rule); text-align: center; }
 .hero h1 { font-size: 3rem; }
 .hero .seal { margin: 0 auto 1.2rem; }
+.works { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.4rem; margin-top: 1.4rem; }
+.works .docno { width: 100%; margin-bottom: 0.2rem; }
+.works .label { background: var(--card); }
 .card { background: var(--card); border: 1px solid var(--rule); padding: 1.25rem 1.5rem; margin: 1rem 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }

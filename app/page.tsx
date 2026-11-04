@@ -13,14 +13,15 @@ export default function Home() {
         <Guilloche />
         <TiltSeal size={140} />
         <p className="docno">Flintspark Labs · Office of the Cabinet</p>
-        <h1>Counsel from the people you trust,<br />drafted by their own AI, signed by their own hand.</h1>
-        <p className="lede">Convene a Cabinet of advisors. Put a Request for Counsel to them. Each one's assistant drafts an Opinion from their own record. Nothing reaches you until they sign it.</p>
+        <h1>Put a question to your friends' AI brains.<br />Get back only what they sign.</h1>
+        <p className="lede">Everyone you trust now has an assistant that has read their email, notes and decisions: a second brain. The Cabinet connects you to it, through them. Their own AI drafts an Opinion from their own record. They read it, edit it and sign it. Nothing else crosses.</p>
         <p><Link href="/login" className="button">Convene a Cabinet</Link> <Link href="#see" className="button secondary">See it work</Link> <Link href="/teaser" className="button secondary">Why this is great</Link></p>
+        <p className="works"><span className="docno">Works with the assistant they already use</span>{["Claude", "ChatGPT", "Gemini", "Copilot", "Claude Code", "Cursor", "Any MCP client"].map((n) => <span key={n} className="label">{n}</span>)}</p>
       </section>
 
-      <h2 id="why">The problem with asking a friend</h2>
-      <p>Advice from trusted people is off the cuff. Their real experience sits in their own AI: email, docs, notes, past decisions, what they tried and what happened. Nobody can ask it on their behalf, and they would never hand it over.</p>
-      <p>The Cabinet lets you put a question to the people you trust, lets each person's own assistant draft an answer from that person's own record, and delivers it only after that person has read it, edited it and signed it.</p>
+      <h2 id="why">Your friend's AI brain</h2>
+      <p>Ask a friend for advice and you get what they remember over coffee. Their real experience is somewhere else now: in the AI that has read their email, their docs, their notes, the decisions they made and how they turned out. That brain knows more than they can recall, and they would never hand it to you.</p>
+      <p>The Cabinet is the line between your question and that brain. You ask the people you trust. Each person's own assistant, whichever one they use, answers from that person's own record, on their side. The person reads it, edits it and signs it. Only the signed Opinion reaches you. Their sources never do.</p>
 
       <h2 id="see">What it looks like on the Secure Line</h2>
       <p>A Secretary adds The Cabinet as a connector in their own AI. The assistant fetches the Dispatch, reads their record where it already lives, drafts under the Standing Orders, and files a draft. The person signs on the site. Only the signed Opinion ever leaves.</p>
