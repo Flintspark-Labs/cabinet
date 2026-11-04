@@ -1,17 +1,21 @@
 import Link from "next/link";
-import { Seal } from "@/components/Seal";
+import { Guilloche } from "@/components/Guilloche";
+import { TiltSeal } from "@/components/TiltSeal";
+import { Reveal } from "@/components/Reveal";
 import { CLASSES } from "@/lib/classes";
 import { SecretaryExhibit, SignExhibit, PrincipalExhibit } from "@/components/Exhibits";
 
 export default function Home() {
   return (
     <>
+      <Reveal />
       <section className="hero">
-        <Seal size={140} />
+        <Guilloche />
+        <TiltSeal size={140} />
         <p className="docno">Flintspark Labs · Office of the Cabinet</p>
         <h1>Counsel from the people you trust,<br />drafted by their own AI, signed by their own hand.</h1>
         <p className="lede">Convene a Cabinet of advisors. Put a Request for Counsel to them. Each one's assistant drafts an Opinion from their own record. Nothing reaches you until they sign it.</p>
-        <p><Link href="/login" className="button">Convene a Cabinet</Link> &nbsp; <Link href="#see" className="button secondary">See it work</Link> &nbsp; <Link href="/teaser" className="button secondary">Why this is great</Link></p>
+        <p><Link href="/login" className="button">Convene a Cabinet</Link> <Link href="#see" className="button secondary">See it work</Link> <Link href="/teaser" className="button secondary">Why this is great</Link></p>
       </section>
 
       <h2 id="why">The problem with asking a friend</h2>

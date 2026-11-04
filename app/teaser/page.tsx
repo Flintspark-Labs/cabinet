@@ -1,13 +1,17 @@
 import Link from "next/link";
-import { Seal } from "@/components/Seal";
+import { Guilloche } from "@/components/Guilloche";
+import { TiltSeal } from "@/components/TiltSeal";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = { title: "Why The Cabinet" };
 
 export default function Teaser() {
   return (
     <>
+      <Reveal />
       <section className="hero">
-        <Seal size={110} />
+        <Guilloche />
+        <TiltSeal size={110} />
         <p className="docno">A short case for The Cabinet</p>
         <h1>The best advice you'll ever get is sitting in your friends' AI. Nobody can ask it.</h1>
         <p className="lede">Until now, asking a smart friend meant getting whatever they remembered on the spot. The Cabinet asks their AI, with their consent, and sends you only what they sign.</p>

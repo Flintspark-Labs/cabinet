@@ -104,3 +104,34 @@ pre.packet { background: #fff; border: 1px solid var(--rule); padding: 1rem; fon
 .stamped.shake { animation: shake 0.3s linear 0.5s 1; }
 @keyframes shake { 0%,100% { transform: translate(0,0); } 25% { transform: translate(2px,-1px); } 50% { transform: translate(-2px,1px); } 75% { transform: translate(1px,2px); } }
 @media (prefers-reduced-motion: reduce) { .stamp.slam, .stamped.shake { animation: none; } }
+
+/* Effects */
+.hero { position: relative; overflow: hidden; }
+.hero > * { position: relative; }
+.guilloche { position: absolute !important; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.tilt { display: inline-block; position: relative; transition: transform 0.25s ease-out; will-change: transform; transform-style: preserve-3d; margin: 0 auto 1.2rem; }
+.tilt .seal { display: block; filter: drop-shadow(0 6px 10px rgba(29,26,20,.18)); }
+.tilt .sheen { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at var(--sx, 50%) var(--sy, 30%), rgba(255,255,255,.55), rgba(255,255,255,0) 55%); pointer-events: none; mix-blend-mode: soft-light; }
+@media (hover: none) { .tilt { animation: float 6s ease-in-out infinite; } }
+@keyframes float { 0%, 100% { transform: perspective(600px) rotateX(6deg) rotateY(-6deg); } 50% { transform: perspective(600px) rotateX(-6deg) rotateY(6deg); } }
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2,.8,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+.steps .card.reveal.in:nth-child(2) { transition-delay: 0.08s; } .steps .card.reveal.in:nth-child(3) { transition-delay: 0.16s; }
+.button, button { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.button:hover, button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 14px -8px rgba(29,26,20,.6); }
+.button:active, button:active { transform: translateY(0) scale(0.98); }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .tilt { animation: none; transition: none; } }
+
+/* Mobile pass */
+@media (max-width: 600px) {
+  main { padding: 1.25rem 1rem 3rem; }
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  table td, table th { white-space: normal; min-width: 8rem; }
+  .hero { padding: 2rem 0 1.5rem; }
+  .hero .button { display: block; margin: 0.5rem auto; width: 100%; max-width: 20rem; }
+  .chat { padding: 0.6rem 0.6rem; }
+  pre.packet { font-size: 0.74rem; }
+  header.masthead nav { gap: 0.8rem; font-size: 0.9rem; }
+  footer .bar { gap: 0.6rem 1.2rem; }
+  .stamped > .stamp { position: static; display: inline-flex; margin-top: 0.6rem; }
+}
