@@ -27,11 +27,12 @@ export async function signOut() {
 export async function convene(_: unknown, f: FormData): Promise<Result> {
   const { supabase, user } = await requireUser();
   const secretaries = str(f, "secretaries").split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
-    const [email, name, portfolio] = l.split(",").map((x) => x.trim());
-    return { email, name: name || email.split("@")[0], portfolio };
+    const parts = l.split(",").map((x) => x.trim());
+    const hasEmail = parts[0].includes("@");
+    return hasEmail ? { email: parts[0], name: parts[1] || parts[0].split("@")[0], portfolio: parts[2] } : { email: null, name: parts[0], portfolio: parts[1] };
   });
   let id: string;
-  try { id = await P.conveneCabinet(supabase, user.id, str(f, "name"), secretaries); } catch (e) { return { error: (e as Error).message }; }
+  try { id = await P.conveneCabinet(supabase, user.id, str(f, "name"), secretaries, str(f, "purpose")); } catch (e) { return { error: (e as Error).message }; }
   redirect(`/cabinets/${id}`);
 }
 

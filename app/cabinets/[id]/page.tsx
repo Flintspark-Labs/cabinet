@@ -9,13 +9,14 @@ import { open } from "@/lib/seal";
 export default async function Cabinet({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await requireUser();
-  const { data: cab } = await supabase.from("cabinets").select("id, name, appointments(id, email, display_name, portfolio), requests(id, rfc_number, class, question, status, return_by, created_at)").eq("id", id).maybeSingle();
+  const { data: cab } = await supabase.from("cabinets").select("id, name, purpose, appointments(id, email, display_name, portfolio), requests(id, rfc_number, class, question, status, return_by, created_at)").eq("id", id).maybeSingle();
   if (!cab) notFound();
   const requests = [...cab.requests].sort((a, b) => b.rfc_number - a.rfc_number);
   return (
     <>
       <p className="docno"><Link href="/cabinets">Cabinets</Link> / Cabinet</p>
       <h1>{cab.name}</h1>
+      {cab.purpose && <p className="kicker">{cab.purpose}</p>}
       <p><Link href={`/requests/new?cabinet=${cab.id}`} className="button">Issue a Request for Counsel</Link></p>
 
       <h2>Secretaries</h2>
@@ -25,7 +26,7 @@ export default async function Cabinet({ params }: { params: Promise<{ id: string
       <details><summary>Appoint a Secretary</summary>
         <ActionForm action={appointSecretary} submit="Appoint">
           <input type="hidden" name="cabinet_id" value={cab.id} />
-          <label htmlFor="email">Email</label><input id="email" type="email" name="email" required />
+          <label htmlFor="email">Email <small>optional; without it they join by share link</small></label><input id="email" type="email" name="email" />
           <label htmlFor="name">Name</label><input id="name" type="text" name="name" required maxLength={120} />
           <label htmlFor="portfolio">Portfolio <small>optional, e.g. Secretary of Databases</small></label><input id="portfolio" type="text" name="portfolio" maxLength={120} />
         </ActionForm>

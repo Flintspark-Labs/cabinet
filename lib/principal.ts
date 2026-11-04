@@ -8,16 +8,16 @@ import { appUrl, rfcNumber, CLASSES, type RfcClass } from "./classes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { seal } from "./seal";
 
-export type Secretary = { email: string; name: string; portfolio?: string | null };
+export type Secretary = { email?: string | null; name: string; portfolio?: string | null };
 
 const cleanEmail = (e: string) => e.trim().toLowerCase();
 const validEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 
 // Principal writes go through the user's own RLS client. Returns the cabinet id.
-export async function conveneCabinet(supabase: SupabaseClient, userId: string, name: string, secretaries: Secretary[]) {
+export async function conveneCabinet(supabase: SupabaseClient, userId: string, name: string, secretaries: Secretary[], purpose?: string | null) {
   name = name.trim();
   if (!name) throw new Error("A Cabinet needs a name.");
-  const { data: cab, error } = await supabase.from("cabinets").insert({ principal_id: userId, name }).select("id").single();
+  const { data: cab, error } = await supabase.from("cabinets").insert({ principal_id: userId, name, purpose: purpose?.trim().slice(0, 500) || null }).select("id").single();
   if (error) throw new Error(error.message);
   for (const s of secretaries) await appoint(supabase, cab.id, s);
   await audit(userId, "convene", "cabinet", cab.id);
@@ -25,13 +25,14 @@ export async function conveneCabinet(supabase: SupabaseClient, userId: string, n
 }
 
 export async function appoint(supabase: SupabaseClient, cabinetId: string, s: Secretary) {
-  const email = cleanEmail(s.email);
+  // Email optional: a name-only Secretary takes their seat through the Request's share link.
+  const email = s.email ? cleanEmail(s.email) : null;
   const name = s.name.trim();
-  if (!validEmail(email) || !name) throw new Error(`Secretary needs a valid email and a name (${s.email}).`);
+  if (!name || (email && !validEmail(email))) throw new Error(`Secretary needs a name and, if given, a valid email (${s.name || s.email}).`);
   const { count } = await supabase.from("appointments").select("id", { count: "exact", head: true }).eq("cabinet_id", cabinetId);
   if ((count ?? 0) >= 25) throw new Error("A Cabinet holds at most 25 Secretaries.");
   const row = { cabinet_id: cabinetId, email, display_name: name, portfolio: s.portfolio?.trim() || null };
-  const { data: existing } = await supabase.from("appointments").select("id").eq("cabinet_id", cabinetId).eq("email", email).maybeSingle();
+  const { data: existing } = email ? await supabase.from("appointments").select("id").eq("cabinet_id", cabinetId).eq("email", email).maybeSingle() : { data: null };
   const { error } = existing ? await supabase.from("appointments").update(row).eq("id", existing.id) : await supabase.from("appointments").insert(row);
   if (error) throw new Error(error.message);
 }

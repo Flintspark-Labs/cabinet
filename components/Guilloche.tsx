@@ -12,8 +12,9 @@ export function Guilloche() {
     const size = () => { const r = c.parentElement!.getBoundingClientRect(); const dpr = Math.min(devicePixelRatio || 1, 2); c.width = r.width * dpr; c.height = r.height * dpr; c.style.width = r.width + "px"; c.style.height = r.height + "px"; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
     const draw = () => {
       const w = c.clientWidth, h = c.clientHeight; ctx.clearRect(0, 0, w, h);
-      ctx.lineWidth = 0.6; ctx.strokeStyle = "rgba(122,31,31,0.28)";
-      const cx = w / 2, cy = h * 0.42, R = Math.min(w, h) * 0.62;
+      const narrow = w < 640;
+      ctx.lineWidth = narrow ? 0.9 : 0.6; ctx.strokeStyle = narrow ? "rgba(122,31,31,0.42)" : "rgba(122,31,31,0.28)";
+      const cx = w / 2, cy = h * 0.42, R = narrow ? Math.max(w, h) * 0.55 : Math.min(w, h) * 0.62;
       // Three hypotrochoid rings with slowly drifting phase.
       const rings = [[7, 0.62, 0.0], [11, 0.48, 1.3], [5, 0.80, 2.1]];
       for (const [k, s, ph] of rings) {
@@ -28,10 +29,11 @@ export function Guilloche() {
       }
       // Fade edges into the paper.
       const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 0.95);
-      g.addColorStop(0, "rgba(247,243,234,0)"); g.addColorStop(1, "rgba(247,243,234,1)");
+      g.addColorStop(0, "rgba(247,243,234,0)"); g.addColorStop(1, narrow ? "rgba(247,243,234,0.85)" : "rgba(247,243,234,1)");
       ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
     };
-    const loop = () => { if (visible && !reduce) { t += 0.012; draw(); } raf = requestAnimationFrame(loop); };
+    const loop = () => { if (visible && !reduce) { t += w() < 640 ? 0.02 : 0.012; draw(); } raf = requestAnimationFrame(loop); };
+    const w = () => c.clientWidth;
     size(); draw(); if (!reduce) raf = requestAnimationFrame(loop);
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }); io.observe(c);
     addEventListener("resize", size);

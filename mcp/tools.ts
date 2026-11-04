@@ -48,12 +48,28 @@ export function registerTools(server: McpServer) {
   const principal = (ctx: Ctx) => ctx.http?.authInfo?.clientId ?? null;
   const needAuth = () => fail(`Principal tools need a personal access token from ${appUrl()}/account sent as Authorization: Bearer.`);
 
-  server.registerTool("convene_cabinet", {
-    title: "Convene Cabinet", description: "Create a Cabinet and appoint Secretaries by email. Requires a Principal personal access token.",
-    inputSchema: z.object({ name: z.string().min(1).max(120), secretaries: z.array(z.object({ email: z.string().email(), name: z.string().min(1).max(120), portfolio: z.string().max(120).optional() })).max(25) }),
-  }, async ({ name, secretaries }, ctx) => {
+  server.registerTool("list_cabinets", {
+    title: "List Cabinets", description: "The Principal's Cabinets with purpose and Secretary count. Check this before convening a new one.",
+    inputSchema: z.object({}), annotations: { readOnlyHint: true },
+  }, async (_a, ctx) => {
     const pid = principal(ctx as Ctx); if (!pid) return needAuth();
-    try { return json({ cabinet_id: await P.conveneCabinet(db(), pid, name, secretaries) }); } catch (e) { return fail((e as Error).message, e); }
+    const { data } = await db().from("cabinets").select("id, name, purpose, created_at, appointments(count)").eq("principal_id", pid).order("created_at", { ascending: false });
+    return json((data ?? []).map((c) => ({ cabinet_id: c.id, name: c.name, purpose: c.purpose, secretaries: (c.appointments as unknown as { count: number }[])[0]?.count ?? 0, created_at: c.created_at })));
+  });
+
+  server.registerTool("convene_cabinet", {
+    title: "Convene Cabinet", description: "Create a Cabinet for the Principal and appoint Secretaries. Draw invitees from the user's own colleagues and contacts (mail, calendar, chat, address book) when they ask you to; confirm the list with them first. Email is optional: Secretaries with an email are dispatched by mail when a Request is issued; name-only Secretaries take their seat through the Request's share_url, which the user sends them. Requires a Principal personal access token.",
+    inputSchema: z.object({
+      name: z.string().min(1).max(120),
+      purpose: z.string().max(500).optional().describe("What this Cabinet is for; shown to the Principal only"),
+      secretaries: z.array(z.object({ name: z.string().min(1).max(120), email: z.string().email().optional(), portfolio: z.string().max(120).optional().describe("Area of counsel, e.g. Secretary of Databases") })).max(25).default([]),
+    }),
+  }, async ({ name, purpose, secretaries }, ctx) => {
+    const pid = principal(ctx as Ctx); if (!pid) return needAuth();
+    try {
+      const cabinet_id = await P.conveneCabinet(db(), pid, name, secretaries, purpose);
+      return json({ cabinet_id, name, secretaries: secretaries.length, by_email: secretaries.filter((s) => s.email).length, next: "Call issue_request with this cabinet_id. Share its share_url with any name-only Secretary." });
+    } catch (e) { return fail((e as Error).message, e); }
   });
 
   server.registerTool("issue_request", {
