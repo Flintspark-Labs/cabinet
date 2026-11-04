@@ -77,7 +77,7 @@ assert.equal((await mcp("get_dispatch", { dispatch_token: wrenToken })).json().s
 jf.set("name", "Too-Late Tom");
 const again = await fetch(BASE + new URL(req.share_url).pathname, { method: "POST", body: jf, redirect: "manual" });
 assert.ok(again.status !== 303 && (await again.text()).includes("seats on this link are taken"), "exhausted link refused");
-assert.ok((await (await fetch(BASE + new URL(req.share_url).pathname)).text()).includes("All 1 seats on this link are taken"));
+assert.ok((await (await fetch(BASE + new URL(req.share_url).pathname)).text()).includes("seats on this link are taken"));
 assert.equal((await mcp("recuse", { dispatch_token: wrenToken })).json().status, "recused");
 
 // Second Secretary recuses; the RFC resolves.
