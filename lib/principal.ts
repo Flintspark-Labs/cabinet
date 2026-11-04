@@ -4,6 +4,7 @@ import { newToken } from "./token";
 import { audit } from "./audit";
 import { sendMail } from "./mail";
 import { dispatchEmail } from "@/emails/dispatch";
+import { inviteEmail } from "@/emails/invite";
 import { appUrl, rfcNumber, CLASSES, type RfcClass, type RequestKind } from "./classes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { seal } from "./seal";
@@ -35,6 +36,12 @@ export async function appoint(supabase: SupabaseClient, cabinetId: string, s: Se
   const { data: existing } = email ? await supabase.from("appointments").select("id").eq("cabinet_id", cabinetId).eq("email", email).maybeSingle() : { data: null };
   const { error } = existing ? await supabase.from("appointments").update(row).eq("id", existing.id) : await supabase.from("appointments").insert(row);
   if (error) throw new Error(error.message);
+  // First appointment by email gets an invitation explaining the role and the optional one-time setup.
+  if (email && !existing && !(await db().from("do_not_dispatch").select("email").eq("email", email).maybeSingle()).data) {
+    const { data: cab } = await supabase.from("cabinets").select("name, principal:profiles(display_name)").eq("id", cabinetId).single();
+    const principal = (cab?.principal as unknown as { display_name: string | null } | null)?.display_name ?? "A Principal";
+    try { await sendMail(email, `${principal} appointed you to their Cabinet`, inviteEmail({ secretary: name, principal, cabinet: cab?.name ?? "their Cabinet", portfolio: row.portfolio, email })); } catch (e) { console.error("invite mail failed:", (e as Error).message); }
+  }
 }
 
 export async function issueRequest(supabase: SupabaseClient, userId: string, input: { cabinet_id: string; question: string; class: string; context: string; return_by?: string | null; share_max_uses?: number | null; kind?: RequestKind | null; nest_url?: string | null }) {

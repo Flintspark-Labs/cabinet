@@ -23,6 +23,18 @@ export default async function Connect({ searchParams }: { searchParams: Promise<
           <p className="small">When the draft is filed, your assistant returns a signing link. Signing is a click on this site.</p>
         </div>); })()}
 
+      <h2>Claude Code: plugin and a daily check</h2>
+      <p>The plugin installs the Secure Line and a <code>/check-for-cabinet-requests</code> skill that searches your connected mail for Dispatches, lists the open ones, and drafts from your own record when you ask. You always sign here.</p>
+      <pre className="packet">{`claude plugin marketplace add Flintspark-Labs/cabinet\nclaude plugin install cabinet@cabinet`}</pre>
+      <p><CopyButton text={"claude plugin marketplace add Flintspark-Labs/cabinet\nclaude plugin install cabinet@cabinet"} label="Copy install commands" /></p>
+      <p><strong>Make it a daily routine.</strong> Any of these:</p>
+      <ol className="procedure">
+        <li>In Claude Code, run <code>/schedule</code> and give it: <em>Run /check-for-cabinet-requests and message me if anything is open</em>, daily. This runs in the cloud; connect your mail there.</li>
+        <li>While a session is open: <code>/loop 24h /check-for-cabinet-requests</code>.</li>
+        <li>On your own machine: a cron line such as <code>0 9 * * * claude -p &quot;/check-for-cabinet-requests&quot;</code>.</li>
+      </ol>
+      <p>Without Claude Code, add the server URL below to any client; the skill is just a written procedure, so you can also paste it: <a href="https://github.com/Flintspark-Labs/cabinet/blob/main/plugin/skills/check-for-cabinet-requests/SKILL.md">read the skill</a>.</p>
+
       <h2>Claude</h2>
       <ol className="procedure">
         <li>In claude.ai or Claude Desktop, open Settings → Connectors → Add custom connector.</li>

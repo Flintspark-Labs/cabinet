@@ -1,0 +1,7 @@
+{
+  "name": "cabinet",
+  "owner": { "name": "Flintspark Labs", "url": "https://github.com/Flintspark-Labs" },
+  "plugins": [
+    { "name": "cabinet", "source": "./plugin", "description": "The Cabinet: Secure Line MCP server plus /check-for-cabinet-requests, which finds your open Requests for Counsel and drafts Opinions from your own record." }
+  ]
+}

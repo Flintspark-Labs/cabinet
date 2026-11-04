@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "cabinet": { "type": "http", "url": "https://cabinet.flintsparklabs.com/api/mcp" }
+  }
+}

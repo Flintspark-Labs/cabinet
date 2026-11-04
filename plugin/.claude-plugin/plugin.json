@@ -1,0 +1,10 @@
+{
+  "name": "cabinet",
+  "version": "0.1.0",
+  "description": "The Cabinet Secure Line (MCP) and the check-for-cabinet-requests skill.",
+  "author": { "name": "Flintspark Labs", "url": "https://cabinet.flintsparklabs.com" },
+  "homepage": "https://cabinet.flintsparklabs.com/connect",
+  "repository": "https://github.com/Flintspark-Labs/cabinet",
+  "license": "MIT",
+  "keywords": ["mcp", "advice", "cabinet"]
+}
